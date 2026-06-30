@@ -57,8 +57,42 @@ Run tests:
 pytest
 ```
 
+If pytest fails on Windows with `PermissionError: [WinError 5] Access is denied`
+for the system pytest temp directory, use a repository-local temp directory in
+PowerShell:
+
+```powershell
+mkdir .tmp_pytest
+$env:TMP = "$PWD\.tmp_pytest"
+$env:TEMP = "$PWD\.tmp_pytest"
+pytest
+```
+
+The `.tmp_pytest/` directory is ignored by Git.
+
 ## Next recommended task
 
 Define the first small domain model and generate its initial Alembic revision.
 Keep authentication separate, and replace the development-only JWT placeholder
 before authentication is implemented or deployed.
+
+## Required session logging
+
+After every future Codex task:
+
+1. Update `handoff.md`.
+2. Create or update `docs/session-logs/YYYY-MM-DD.md` for the actual session
+   date.
+
+Update these cumulative documents only when the task materially changes their
+content:
+
+- `docs/work-summary.md`
+- `docs/learning-notes/backend-concepts.md`
+- `docs/learning-notes/cs-dsa-concepts.md`
+
+Every session entry must use the template in
+`docs/session-logs/2026-06-29.md` and include goal, actual changes, files,
+validation commands and results, backend concepts, CS/DSA concepts, design
+decisions, issues or warnings, and the next small task. If no major DSA was used,
+state that explicitly and document the closest relevant CS concept.
