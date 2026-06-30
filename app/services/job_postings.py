@@ -16,6 +16,13 @@ class DuplicateJobPostingError(ValueError):
         )
 
 
+def get_job_posting_by_id(
+    db: Session,
+    job_posting_id: int,
+) -> JobPosting | None:
+    return db.get(JobPosting, job_posting_id)
+
+
 def get_job_posting_by_identity(
     db: Session,
     source: str,

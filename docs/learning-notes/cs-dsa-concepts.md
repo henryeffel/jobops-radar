@@ -61,6 +61,14 @@ the common case. The database unique constraint remains the final safety layer
 for concurrent requests that pass the check together. This combines usability
 with correctness instead of treating the pre-check as synchronization.
 
+## Idempotent Create Behavior
+
+For a fixed `(source, external_id)` and equivalent input, repeated create
+requests converge on one stored resource instead of creating additional rows.
+This gives clients safe retry behavior after uncertain network outcomes. No new
+DSA was introduced; idempotency is a distributed-systems/API correctness
+property.
+
 ## Future Concepts
 
 ### Hashing

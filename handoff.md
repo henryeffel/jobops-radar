@@ -23,6 +23,9 @@
 - `JobPostingCreate` and `JobPostingRead` define validated persistence DTOs.
   The job posting service creates records, retrieves them by source identity,
   and translates duplicate conflicts into `DuplicateJobPostingError`.
+- FastAPI exposes `POST /job-postings`, `GET /job-postings/{job_posting_id}`,
+  and `GET /job-postings/by-source/{source}/{external_id}`. Duplicate POSTs
+  return the existing record without inserting another row.
 - The initial Alembic revision creates `job_postings` and works with SQLite;
   PostgreSQL offline SQL generation also passes.
 - Saramin Open API approval is pending. No Saramin client, access key
@@ -34,8 +37,8 @@
 
 ## Verification
 
-- `python -m pytest -q`: 13 passed, including schema serialization, service
-  persistence, retrieval, and duplicate rejection.
+- `python -m pytest -q -p no:cacheprovider`: 19 passed, including route create,
+  both lookup paths, duplicate idempotency, 404 responses, and OpenAPI paths.
 - SQLite migration upgrade, `alembic check`, and downgrade passed.
 - PostgreSQL offline migration SQL generation passed.
 - Python source compilation passed.
@@ -67,7 +70,7 @@ run `alembic upgrade head` again.
 Run tests:
 
 ```bash
-python -m pytest -q
+python -m pytest -q -p no:cacheprovider
 ```
 
 Tests use a new in-memory SQLite engine per test and do not require a filesystem
@@ -79,9 +82,8 @@ artifacts.
 
 ## Next recommended task
 
-Expose the existing service through minimal `POST /job-postings` and
-`GET /job-postings/{source}/{external_id}` routes, including `409 Conflict` for
-duplicates. Keep Saramin integration and authentication separate.
+Add `GET /job-postings` with bounded `limit`/`offset` pagination and a small
+service query. Keep Saramin integration and authentication separate.
 
 ## Required session logging
 

@@ -103,8 +103,36 @@ from duplicating database lifecycle code.
 
 The service converts a known uniqueness conflict into
 `DuplicateJobPostingError`. The custom exception does not depend on FastAPI, so
-a later API route can translate it to HTTP `409 Conflict` while service tests
-remain framework-independent.
+the API route can return the existing resource while service tests remain
+framework-independent. Another client contract could translate the same
+exception to HTTP `409 Conflict` without changing persistence code.
+
+## APIRouter and HTTP Boundary
+
+The JobPosting `APIRouter` groups related paths under `/job-postings` and is
+registered once by the FastAPI app. Route handlers validate HTTP input, call the
+service, translate missing data to `404`, and serialize `JobPostingRead`. They do
+not contain SQLAlchemy query construction.
+
+## FastAPI Database Dependency
+
+Routes request a SQLAlchemy `Session` through `Depends(get_db)`. FastAPI resolves
+the generator dependency per request and closes the session afterward. Route
+tests replace only this dependency, allowing the real app and router to run
+against an isolated in-memory SQLite engine.
+
+## Create-or-Get HTTP Semantics
+
+`POST /job-postings` returns `201 Created` when it inserts a row. If the same
+source identity already exists, it returns that existing resource with `200 OK`
+and the identical response schema. The database remains the final uniqueness
+authority.
+
+## OpenAPI Route Verification
+
+FastAPI generates `/docs` from registered route metadata. The route test checks
+the OpenAPI `paths` object directly, preventing a router-registration omission
+from silently removing endpoints from documentation.
 
 ## Interview Review Questions
 
@@ -117,3 +145,5 @@ remain framework-independent.
 - How does Alembic discover SQLAlchemy models?
 - Why should a service exception remain independent from HTTP?
 - Who owns commit and rollback in the current create workflow?
+- How does dependency override isolate API tests from the local database?
+- Why does duplicate POST return `200` while a new insert returns `201`?
