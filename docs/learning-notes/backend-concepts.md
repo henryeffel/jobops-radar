@@ -85,6 +85,27 @@ Each mapped model registers its table with `Base.metadata`. Alembic calls
 `job_postings`. `alembic check` confirms the migration and model metadata do not
 currently differ.
 
+## Pydantic Persistence Schemas
+
+`JobPostingCreate` validates and bounds external input before it reaches
+SQLAlchemy. `JobPostingRead` enables `from_attributes`, converting a mapped ORM
+instance into a stable response-ready data shape. These DTOs keep API/input
+concerns separate from persistence state such as generated IDs and timestamps.
+
+## Service Transaction Boundary
+
+The job posting service owns the small create transaction: it checks identity,
+adds the model, commits, rolls back on integrity failure, and refreshes generated
+values. Keeping this sequence in one function prevents future route handlers
+from duplicating database lifecycle code.
+
+## Duplicate Error Translation
+
+The service converts a known uniqueness conflict into
+`DuplicateJobPostingError`. The custom exception does not depend on FastAPI, so
+a later API route can translate it to HTTP `409 Conflict` while service tests
+remain framework-independent.
+
 ## Interview Review Questions
 
 - What is the difference between an engine, connection, and session?
@@ -94,3 +115,5 @@ currently differ.
 - Why are schema migrations preferable to manual production table changes?
 - Why must duplicate prevention be enforced by the database?
 - How does Alembic discover SQLAlchemy models?
+- Why should a service exception remain independent from HTTP?
+- Who owns commit and rollback in the current create workflow?

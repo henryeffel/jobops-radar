@@ -20,6 +20,9 @@
 - A provider-neutral `JobPosting` model stores mock/manual data now and can
   support Saramin later. The database enforces unique `(source, external_id)`
   pairs.
+- `JobPostingCreate` and `JobPostingRead` define validated persistence DTOs.
+  The job posting service creates records, retrieves them by source identity,
+  and translates duplicate conflicts into `DuplicateJobPostingError`.
 - The initial Alembic revision creates `job_postings` and works with SQLite;
   PostgreSQL offline SQL generation also passes.
 - Saramin Open API approval is pending. No Saramin client, access key
@@ -31,8 +34,8 @@
 
 ## Verification
 
-- `python -m pytest -q --basetemp=.tmp_pytest/jobposting-tests`: 10 passed,
-  including model persistence and duplicate rejection.
+- `python -m pytest -q`: 13 passed, including schema serialization, service
+  persistence, retrieval, and duplicate rejection.
 - SQLite migration upgrade, `alembic check`, and downgrade passed.
 - PostgreSQL offline migration SQL generation passed.
 - Python source compilation passed.
@@ -64,33 +67,21 @@ run `alembic upgrade head` again.
 Run tests:
 
 ```bash
-pytest
+python -m pytest -q
 ```
 
-If pytest fails on Windows with `PermissionError: [WinError 5] Access is denied`
-for the system pytest temp directory, use a repository-local temp directory in
-PowerShell:
-
-```powershell
-mkdir .tmp_pytest
-$env:TMP = "$PWD\.tmp_pytest"
-$env:TEMP = "$PWD\.tmp_pytest"
-pytest
-```
-
-The `.tmp_pytest/` directory is ignored by Git.
-
-If the environment-variable workaround still encounters an inaccessible
-`pytest-of-Henry` directory, select a fresh base directory explicitly:
-
-```powershell
-pytest --basetemp=.tmp_pytest/test-run
-```
+Tests use a new in-memory SQLite engine per test and do not require a filesystem
+temp database. Do not pass a persistent or protected directory through
+`--basetemp`; pytest may clean and recreate the directory it owns. Future tests
+that genuinely need files should request pytest's `tmp_path` fixture without
+hardcoding its parent. `.tmp_pytest/` remains ignored for local troubleshooting
+artifacts.
 
 ## Next recommended task
 
-Add Pydantic create/read schemas and a small persistence layer for manual/mock
-`JobPosting` records. Keep Saramin integration and authentication separate.
+Expose the existing service through minimal `POST /job-postings` and
+`GET /job-postings/{source}/{external_id}` routes, including `409 Conflict` for
+duplicates. Keep Saramin integration and authentication separate.
 
 ## Required session logging
 

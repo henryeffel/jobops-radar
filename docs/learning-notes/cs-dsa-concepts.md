@@ -54,6 +54,13 @@ insert commits. The database unique constraint serializes the final invariant:
 one insert succeeds and the conflicting insert fails. No major DSA was added;
 this is a concurrency and data-integrity concept.
 
+## Defense in Depth for Duplicate Handling
+
+The service first queries by `(source, external_id)` to return a clear error in
+the common case. The database unique constraint remains the final safety layer
+for concurrent requests that pass the check together. This combines usability
+with correctness instead of treating the pre-check as synchronization.
+
 ## Future Concepts
 
 ### Hashing

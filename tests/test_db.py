@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
@@ -21,9 +19,8 @@ def test_get_db_yields_session() -> None:
     dependency.close()
 
 
-def test_sqlite_engine_connects(tmp_path: Path) -> None:
-    sqlite_path = tmp_path / "test.db"
-    sqlite_engine = create_db_engine(f"sqlite:///{sqlite_path.as_posix()}")
+def test_sqlite_engine_connects() -> None:
+    sqlite_engine = create_db_engine("sqlite://")
 
     try:
         with sqlite_engine.connect() as connection:
