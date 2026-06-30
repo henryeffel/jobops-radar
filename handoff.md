@@ -21,6 +21,8 @@
 - No authentication, database models, or Saramin integration has been added.
 - Project-specific backend interview notes are available in
   `docs/interview-prep/`, with implemented and future topics labeled separately.
+- Architecture decisions are indexed in `docs/adr/README.md`; add or supersede
+  ADRs when a future task changes a consequential design decision.
 
 ## Verification
 

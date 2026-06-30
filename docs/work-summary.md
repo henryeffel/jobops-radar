@@ -19,6 +19,7 @@ while Docker Desktop installation is pending.
 | Local database | Temporary | SQLite fallback through `sqlite:///./jobops.db` |
 | Migrations | Foundation complete | Alembic initialized and connected to app settings |
 | Production database | Pending locally | PostgreSQL Compose definition retained; Docker not installed |
+| Architecture records | Complete and ongoing | ADR index documents active decisions and trade-offs |
 
 ## Current Validation State
 
