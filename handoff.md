@@ -34,6 +34,8 @@
   `docs/interview-prep/`, with implemented and future topics labeled separately.
 - Architecture decisions are indexed in `docs/adr/README.md`; add or supersede
   ADRs when a future task changes a consequential design decision.
+- Daily progress for 2026-06-30 is summarized in
+  `docs/daily-logs/2026-06-30.md`.
 
 ## Verification
 
