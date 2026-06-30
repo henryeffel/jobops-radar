@@ -11,3 +11,8 @@ def test_health() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_app_metadata_uses_settings() -> None:
+    assert app.title == "JobOps Radar"
+    assert app.version == "0.1.0"
