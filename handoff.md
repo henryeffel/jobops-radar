@@ -19,6 +19,8 @@
 - Alembic is initialized and reads the same `DATABASE_URL` as the application.
 - No migration revisions or database models exist yet.
 - No authentication, database models, or Saramin integration has been added.
+- Project-specific backend interview notes are available in
+  `docs/interview-prep/`, with implemented and future topics labeled separately.
 
 ## Verification
 
