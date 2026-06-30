@@ -17,8 +17,13 @@
 - SQLAlchemy 2.0 provides a shared engine, session factory, declarative base, and
   FastAPI `get_db()` dependency.
 - Alembic is initialized and reads the same `DATABASE_URL` as the application.
-- No migration revisions or database models exist yet.
-- No authentication, database models, or Saramin integration has been added.
+- A provider-neutral `JobPosting` model stores mock/manual data now and can
+  support Saramin later. The database enforces unique `(source, external_id)`
+  pairs.
+- The initial Alembic revision creates `job_postings` and works with SQLite;
+  PostgreSQL offline SQL generation also passes.
+- Saramin Open API approval is pending. No Saramin client, access key
+  requirement, authentication, or user model has been added.
 - Project-specific backend interview notes are available in
   `docs/interview-prep/`, with implemented and future topics labeled separately.
 - Architecture decisions are indexed in `docs/adr/README.md`; add or supersede
@@ -26,9 +31,10 @@
 
 ## Verification
 
-- `python -m pytest -q`: 7 passed, including a real temporary SQLite connection.
-- `python -m alembic upgrade head --sql`: passed with the SQLite URL in offline
-  SQL mode.
+- `python -m pytest -q --basetemp=.tmp_pytest/jobposting-tests`: 10 passed,
+  including model persistence and duplicate rejection.
+- SQLite migration upgrade, `alembic check`, and downgrade passed.
+- PostgreSQL offline migration SQL generation passed.
 - Python source compilation passed.
 - Docker Compose runtime validation was skipped because Docker was not installed
   in the implementation environment.
@@ -74,11 +80,17 @@ pytest
 
 The `.tmp_pytest/` directory is ignored by Git.
 
+If the environment-variable workaround still encounters an inaccessible
+`pytest-of-Henry` directory, select a fresh base directory explicitly:
+
+```powershell
+pytest --basetemp=.tmp_pytest/test-run
+```
+
 ## Next recommended task
 
-Define the first small domain model and generate its initial Alembic revision.
-Keep authentication separate, and replace the development-only JWT placeholder
-before authentication is implemented or deployed.
+Add Pydantic create/read schemas and a small persistence layer for manual/mock
+`JobPosting` records. Keep Saramin integration and authentication separate.
 
 ## Required session logging
 

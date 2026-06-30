@@ -58,6 +58,33 @@ starting a separate server. Assertions verify response status and payload.
 Database foundation tests verify URL wiring, session creation, and a real
 temporary SQLite connection without requiring PostgreSQL.
 
+## SQLAlchemy 2.0 Mapped Model
+
+`JobPosting` uses `Mapped[...]` annotations and `mapped_column()` so Python types
+and database columns are explicit. Required identity/display fields are
+non-nullable, while provider-dependent metadata is optional. The model is
+provider-neutral: `source="mock"` works before any external API integration.
+
+## Database-Level Unique Constraint
+
+The named unique constraint on `(source, external_id)` makes posting identity a
+database invariant. It rejects duplicates even if concurrent code performs the
+same import. A Python-side existence check alone cannot close that race.
+
+## Portable JSON Payload
+
+SQLAlchemy's generic `JSON` type stores unmodified provider or mock fields without
+prematurely modeling every attribute. It maps to SQLite's JSON-capable storage
+now and PostgreSQL JSON later. PostgreSQL-specific `JSONB` features are deferred
+to preserve portability.
+
+## Model Metadata Discovery
+
+Each mapped model registers its table with `Base.metadata`. Alembic calls
+`load_models()` before assigning `target_metadata`, ensuring autogenerate sees
+`job_postings`. `alembic check` confirms the migration and model metadata do not
+currently differ.
+
 ## Interview Review Questions
 
 - What is the difference between an engine, connection, and session?
@@ -65,3 +92,5 @@ temporary SQLite connection without requiring PostgreSQL.
 - What does a health endpoint prove, and what does it not prove?
 - How does FastAPI generate `/docs`?
 - Why are schema migrations preferable to manual production table changes?
+- Why must duplicate prevention be enforced by the database?
+- How does Alembic discover SQLAlchemy models?

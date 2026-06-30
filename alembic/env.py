@@ -4,13 +4,14 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 
 from app.core.config import get_settings
-from app.db.base import Base
+from app.db.base import Base, load_models
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+load_models()
 target_metadata = Base.metadata
 
 

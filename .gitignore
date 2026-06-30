@@ -13,6 +13,9 @@ venv/
 .env.*
 !.env.example
 
+jobops.db
+jobops.db-*
+
 .idea/
 .vscode/
 .DS_Store

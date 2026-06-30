@@ -39,6 +39,21 @@ can differ. Tests passing on SQLite do not prove identical PostgreSQL behavior.
 no arguments, it behaves like a lazily initialized shared settings object. Lookup
 after initialization is effectively constant time for this use.
 
+## Composite Identity and Invariants
+
+An external posting ID is unique only within its source, so the ordered pair
+`(source, external_id)` forms the business identity. A composite unique
+constraint encodes that invariant in the database while allowing different
+providers to reuse the same external ID.
+
+## Check-Then-Insert Race
+
+An application that checks for a row and then inserts it performs two separate
+operations. Concurrent transactions can both observe "not found" before either
+insert commits. The database unique constraint serializes the final invariant:
+one insert succeeds and the conflicting insert fails. No major DSA was added;
+this is a concurrency and data-integrity concept.
+
 ## Future Concepts
 
 ### Hashing

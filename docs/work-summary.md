@@ -13,26 +13,28 @@ while Docker Desktop installation is pending.
 | --- | --- | --- |
 | Repository | Complete | Git initialized with GitHub `origin`, `main`, and `dev` workflow |
 | API skeleton | Complete | FastAPI app, `/health`, and generated `/docs` |
-| Testing | Complete | pytest health, settings, engine, and SQLite connection tests |
+| Testing | Complete | pytest health, settings, DB, model persistence, and uniqueness tests |
 | Configuration | Complete | Typed `pydantic-settings`, optional `.env`, cached settings |
 | Database foundation | Complete | SQLAlchemy 2.0 engine, session factory, base, and `get_db()` |
 | Local database | Temporary | SQLite fallback through `sqlite:///./jobops.db` |
-| Migrations | Foundation complete | Alembic initialized and connected to app settings |
+| Domain storage | Initial model complete | Provider-neutral `JobPosting` with database uniqueness |
+| Migrations | Initial revision complete | Alembic creates and drops the `job_postings` table |
 | Production database | Pending locally | PostgreSQL Compose definition retained; Docker not installed |
 | Architecture records | Complete and ongoing | ADR index documents active decisions and trade-offs |
 
 ## Current Validation State
 
-- Seven pytest tests pass.
+- Ten pytest tests pass.
 - `/health` returns `{"status": "ok"}`.
 - `/docs` has been verified.
-- Alembic offline SQL generation works with SQLite.
-- A temporary SQLite database connection is covered by a test.
+- SQLite migration upgrade/check/downgrade passes.
+- PostgreSQL offline migration SQL generation passes.
+- Mock `JobPosting` persistence and duplicate rejection are covered by tests.
 
 ## Explicitly Not Implemented
 
 - Authentication or user models
-- Business/domain models
+- JobPosting CRUD schemas, repository, and API routes
 - Saramin API integration
 - LLM analysis or scoring
 - Frontend
@@ -40,6 +42,5 @@ while Docker Desktop installation is pending.
 
 ## Next Milestone
 
-Define one minimal `JobPosting` model based on imported Saramin metadata, create
-the first Alembic revision, and test persistence without expanding into
-authentication or analysis features.
+Add Pydantic create/read schemas and a small persistence layer for manual/mock
+`JobPosting` data without expanding into authentication or Saramin integration.
