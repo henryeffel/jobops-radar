@@ -151,6 +151,29 @@ pages do not depend on an unspecified database row order. Offset pagination can
 still shift when rows are inserted between requests; cursor pagination is
 deliberately deferred.
 
+## Structured Child Entity and Referential Integrity
+
+`JobRequirement` turns one JD statement into a queryable child row of a
+`JobPosting`. Its non-null foreign key prevents requirements from being stored
+without a parent in databases that enforce referential integrity. The service
+also checks parent existence so callers receive a domain-specific failure and
+tests remain correct even when SQLite foreign-key enforcement differs by
+connection configuration.
+
+## Layered Domain Validation
+
+`importance` is constrained from 1 through 5 in both Pydantic and a database
+`CHECK` constraint. Pydantic gives callers an early, readable validation error;
+the database remains the final invariant when data bypasses the schema. The
+requirement category stays a string column for simple storage, while the create
+schema restricts current accepted values.
+
+## Foreign-Key Lookup Index
+
+The `job_requirements.job_posting_id` index supports the primary access pattern:
+listing requirements for one posting. It does not change correctness, but avoids
+a full table scan as requirement data grows.
+
 ## Interview Review Questions
 
 - What is the difference between an engine, connection, and session?
@@ -166,3 +189,5 @@ deliberately deferred.
 - Why does duplicate POST return `200` while a new insert returns `201`?
 - Why does paginated data need a unique tie-breaker in its ordering?
 - What work does a bounded `limit` protect, and what does it not protect?
+- Why validate importance in both Pydantic and the database?
+- Why does the child table index its foreign key?

@@ -37,8 +37,16 @@
 - `GET /job-postings` uses bounded offset pagination. It defaults to
   `limit=20&offset=0`, accepts limits from 1 through 100 and non-negative
   offsets, and orders by `created_at DESC, id DESC`.
-- The initial Alembic revision creates `job_postings` and works with SQLite;
-  PostgreSQL offline SQL generation also passes.
+- `JobRequirement` stores one structured JD requirement linked to an existing
+  `JobPosting`. It uses string requirement types, importance 1–5, optional
+  evidence, and `source="manual"` by default.
+- `JobRequirementCreate` and `JobRequirementRead` validate the persistence
+  contract. Services create, retrieve, and list requirements by posting in
+  deterministic `id ASC` order; no requirement API routes exist yet.
+- The database enforces the posting foreign key and importance range, and
+  indexes `job_posting_id` for per-posting lookup.
+- Two Alembic revisions create `job_postings` and `job_requirements`. The
+  current SQLite head is `6f3b6c2d8a91`.
 - Saramin Open API approval is pending. No Saramin client, access key
   requirement, authentication, or user model has been added.
 - Project-specific backend interview notes are available in
@@ -53,9 +61,10 @@
 
 ## Verification
 
-- `python -m pytest -q -p no:cacheprovider`: 30 passed, including pagination
-  defaults, limit/offset behavior, deterministic ordering, invalid query
-  validation, route creation and lookups, `/health`, and OpenAPI paths.
+- `python -m pytest -q -p no:cacheprovider`: 40 passed, including JobRequirement
+  parent linkage, type storage, importance validation, Carrot case-study data,
+  existing pagination, `/health`, and OpenAPI paths.
+- `python -m alembic check`: no new upgrade operations detected.
 - SQLite migration upgrade, `alembic check`, and downgrade passed.
 - PostgreSQL offline migration SQL generation passed.
 - Python source compilation passed.
@@ -99,9 +108,9 @@ artifacts.
 
 ## Next recommended task
 
-Add structured JD requirement persistence for manually curated case-study data:
-define the minimal model, migration, schemas, service, and tests without adding
-LLM extraction or Auth/OIDC endpoints.
+Expose the tested JobRequirement service through small nested create/list API
+operations and route tests. Keep analysis summaries, LLM extraction, candidate
+profiles, and Auth/OIDC out of that PR.
 
 ## Required session logging
 

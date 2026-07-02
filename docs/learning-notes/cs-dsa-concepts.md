@@ -82,6 +82,14 @@ ordered result. Large offsets may still require the database to scan or discard
 many rows, which is one reason cursor pagination may be preferable at larger
 scale.
 
+## Parent-Child Data Modeling
+
+One `JobPosting` can own many `JobRequirement` rows, forming a one-to-many
+relationship. The foreign key preserves the graph edge at the relational-data
+level, while the per-parent index improves lookup from a posting to its
+requirements. No major DSA was introduced; the closest concepts are referential
+integrity, indexed lookup, and ordered traversal by requirement ID.
+
 ## Future Concepts
 
 ### Hashing
