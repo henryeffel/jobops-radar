@@ -23,9 +23,13 @@
 - `JobPostingCreate` and `JobPostingRead` define validated persistence DTOs.
   The job posting service creates records, retrieves them by source identity,
   and translates duplicate conflicts into `DuplicateJobPostingError`.
-- FastAPI exposes `POST /job-postings`, `GET /job-postings/{job_posting_id}`,
-  and `GET /job-postings/by-source/{source}/{external_id}`. Duplicate POSTs
-  return the existing record without inserting another row.
+- FastAPI exposes `POST /job-postings`, `GET /job-postings`,
+  `GET /job-postings/{job_posting_id}`, and
+  `GET /job-postings/by-source/{source}/{external_id}`. Duplicate POSTs return
+  the existing record without inserting another row.
+- `GET /job-postings` uses bounded offset pagination. It defaults to
+  `limit=20&offset=0`, accepts limits from 1 through 100 and non-negative
+  offsets, and orders by `created_at DESC, id DESC`.
 - The initial Alembic revision creates `job_postings` and works with SQLite;
   PostgreSQL offline SQL generation also passes.
 - Saramin Open API approval is pending. No Saramin client, access key
@@ -39,8 +43,9 @@
 
 ## Verification
 
-- `python -m pytest -q -p no:cacheprovider`: 19 passed, including route create,
-  both lookup paths, duplicate idempotency, 404 responses, and OpenAPI paths.
+- `python -m pytest -q -p no:cacheprovider`: 30 passed, including pagination
+  defaults, limit/offset behavior, deterministic ordering, invalid query
+  validation, route creation and lookups, `/health`, and OpenAPI paths.
 - SQLite migration upgrade, `alembic check`, and downgrade passed.
 - PostgreSQL offline migration SQL generation passed.
 - Python source compilation passed.
@@ -84,8 +89,9 @@ artifacts.
 
 ## Next recommended task
 
-Add `GET /job-postings` with bounded `limit`/`offset` pagination and a small
-service query. Keep Saramin integration and authentication separate.
+Add a GitHub Actions test workflow, initially using SQLite, so the 30-test suite
+and source compilation run on every pull request. Keep PostgreSQL integration as
+a separate follow-up when Docker is available.
 
 ## Required session logging
 

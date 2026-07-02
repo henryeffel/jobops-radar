@@ -18,27 +18,29 @@ while Docker Desktop installation is pending.
 | Database foundation | Complete | SQLAlchemy 2.0 engine, session factory, base, and `get_db()` |
 | Local database | Temporary | SQLite fallback through `sqlite:///./jobops.db` |
 | Domain storage | Initial model complete | Provider-neutral `JobPosting` with database uniqueness |
-| Persistence service | Complete | Validated create/read schemas, create, identity lookup, duplicate translation |
-| JobPosting API | Initial operations complete | Create-or-get, lookup by ID, and lookup by source identity |
+| Persistence service | Complete | Validated create/read schemas, create, identity lookup, duplicate translation, paginated listing |
+| JobPosting API | Initial operations complete | Create-or-get, two identity lookups, and bounded list pagination |
 | Migrations | Initial revision complete | Alembic creates and drops the `job_postings` table |
 | Production database | Pending locally | PostgreSQL Compose definition retained; Docker not installed |
 | Architecture records | Complete and ongoing | ADR index documents active decisions and trade-offs |
 
 ## Current Validation State
 
-- Nineteen pytest tests pass.
+- Thirty pytest tests pass.
 - `/health` returns `{"status": "ok"}`.
 - `/docs` has been verified.
 - SQLite migration upgrade/check/downgrade passes.
 - PostgreSQL offline migration SQL generation passes.
 - Mock `JobPosting` persistence and duplicate rejection are covered by tests.
 - Service-level creation, identity retrieval, and duplicate handling are tested.
-- `/docs` includes all three JobPosting operations.
+- `/docs` includes `GET /job-postings` and all existing JobPosting operations.
+- Pagination is ordered by `created_at DESC, id DESC`; `limit` is bounded to
+  1–100 and `offset` must be non-negative.
 
 ## Explicitly Not Implemented
 
 - Authentication or user models
-- JobPosting list/pagination, update, and delete operations
+- JobPosting update and delete operations
 - Saramin API integration
 - LLM analysis or scoring
 - Frontend
@@ -46,5 +48,5 @@ while Docker Desktop installation is pending.
 
 ## Next Milestone
 
-Add a bounded paginated JobPosting list route without expanding into
-authentication or Saramin integration.
+Add a GitHub Actions workflow that runs the test suite and source compilation on
+pull requests, without expanding into authentication or Saramin integration.

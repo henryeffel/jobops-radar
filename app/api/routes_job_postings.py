@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -10,10 +10,24 @@ from app.services import (
     create_job_posting,
     get_job_posting_by_id,
     get_job_posting_by_identity,
+    list_job_postings,
 )
 
 router = APIRouter(prefix="/job-postings", tags=["job-postings"])
 DbSession = Annotated[Session, Depends(get_db)]
+
+
+@router.get(
+    "",
+    response_model=list[JobPostingRead],
+)
+def read_job_postings(
+    db: DbSession,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[JobPostingRead]:
+    postings = list_job_postings(db, limit=limit, offset=offset)
+    return [JobPostingRead.model_validate(posting) for posting in postings]
 
 
 @router.post(

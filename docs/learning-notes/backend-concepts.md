@@ -134,6 +134,23 @@ FastAPI generates `/docs` from registered route metadata. The route test checks
 the OpenAPI `paths` object directly, preventing a router-registration omission
 from silently removing endpoints from documentation.
 
+## Bounded Offset Pagination
+
+`GET /job-postings` applies SQL `LIMIT` and `OFFSET` through SQLAlchemy
+`select()`. FastAPI `Query` constraints keep `limit` between 1 and 100 and
+`offset` at zero or greater, returning `422` before the service executes when a
+value is invalid. The upper limit bounds response serialization, transfer size,
+and per-request application work.
+
+## Deterministic Database Ordering
+
+Pagination requires a total order. `created_at DESC` puts the newest postings
+first, but timestamps can tie. Adding the unique `id DESC` key resolves every
+tie, so repeated reads of unchanged data produce the same order and adjacent
+pages do not depend on an unspecified database row order. Offset pagination can
+still shift when rows are inserted between requests; cursor pagination is
+deliberately deferred.
+
 ## Interview Review Questions
 
 - What is the difference between an engine, connection, and session?
@@ -147,3 +164,5 @@ from silently removing endpoints from documentation.
 - Who owns commit and rollback in the current create workflow?
 - How does dependency override isolate API tests from the local database?
 - Why does duplicate POST return `200` while a new insert returns `201`?
+- Why does paginated data need a unique tie-breaker in its ordering?
+- What work does a bounded `limit` protect, and what does it not protect?
