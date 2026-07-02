@@ -23,7 +23,7 @@ jobs:
       SARAMIN_API_BASE_URL: https://oapi.saramin.co.kr
       LLM_API_KEY: test-llm-key
       LLM_MOCK_MODE: "true"
-      APP_ENV: test
+      APP_ENV: development
       DEBUG: "false"
 
     steps:
