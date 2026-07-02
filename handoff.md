@@ -2,6 +2,12 @@
 
 ## Current state
 
+- `README.md` now defines the product purpose, current implementation, local
+  setup, environment variables, API surface, CI behavior, and roadmap.
+- The Karrot Identity Service Backend posting is documented as the first case
+  study under `docs/job-analysis/`. It guides future OIDC, B2B account,
+  security/privacy, availability, authentication UX, and audit-log work without
+  claiming those capabilities are implemented.
 - Minimal FastAPI application initialized.
 - `GET /health` returns `{"status": "ok"}`.
 - Environment and optional `.env` settings use cached `pydantic-settings`.
@@ -40,6 +46,9 @@
   ADRs when a future task changes a consequential design decision.
 - Daily progress for 2026-06-30 is summarized in
   `docs/daily-logs/2026-06-30.md`.
+- GitHub Actions runs on pushes and pull requests targeting `main` or `dev`.
+  CI installs the repository and development extras from `pyproject.toml` with
+  `pip install -e ".[dev]"`, then runs tests, migrations, and compilation.
 
 ## Verification
 
@@ -89,9 +98,9 @@ artifacts.
 
 ## Next recommended task
 
-Add a GitHub Actions test workflow, initially using SQLite, so the 30-test suite
-and source compilation run on every pull request. Keep PostgreSQL integration as
-a separate follow-up when Docker is available.
+Add structured JD requirement persistence for manually curated case-study data:
+define the minimal model, migration, schemas, service, and tests without adding
+LLM extraction or Auth/OIDC endpoints.
 
 ## Required session logging
 
