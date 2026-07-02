@@ -18,7 +18,7 @@ jobs:
       DATABASE_URL: sqlite:///./jobops_ci.db
       JWT_SECRET_KEY: test-secret-key
       JWT_ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
       SARAMIN_ACCESS_KEY: test-saramin-key
       SARAMIN_API_BASE_URL: https://oapi.saramin.co.kr
       LLM_API_KEY: test-llm-key
