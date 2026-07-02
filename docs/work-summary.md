@@ -13,6 +13,7 @@ while Docker Desktop installation is pending.
 | --- | --- | --- |
 | Repository | Complete | Git initialized with GitHub `origin`, `main`, and `dev` workflow |
 | API skeleton | Complete | FastAPI app, `/health`, generated `/docs`, and JobPosting routes |
+| Project documentation | Foundation complete | English/Korean READMEs and Carrot Identity Service case study define current scope and roadmap |
 | Testing | Complete | pytest health, settings, DB, model, schema, service, and route tests |
 | Configuration | Complete | Typed `pydantic-settings`, optional `.env`, cached settings |
 | Database foundation | Complete | SQLAlchemy 2.0 engine, session factory, base, and `get_db()` |
@@ -23,6 +24,7 @@ while Docker Desktop installation is pending.
 | Migrations | Initial revision complete | Alembic creates and drops the `job_postings` table |
 | Production database | Pending locally | PostgreSQL Compose definition retained; Docker not installed |
 | Architecture records | Complete and ongoing | ADR index documents active decisions and trade-offs |
+| Continuous integration | Initial workflow complete | GitHub Actions installs project dev extras, tests migrations, and compiles sources |
 
 ## Current Validation State
 
@@ -48,5 +50,5 @@ while Docker Desktop installation is pending.
 
 ## Next Milestone
 
-Add a GitHub Actions workflow that runs the test suite and source compilation on
-pull requests, without expanding into authentication or Saramin integration.
+Add structured JD requirement persistence for manually curated case-study data,
+without adding LLM extraction, authentication, or OIDC endpoints.
