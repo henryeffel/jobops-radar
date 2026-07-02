@@ -13,7 +13,7 @@ while Docker Desktop installation is pending.
 | --- | --- | --- |
 | Repository | Complete | Git initialized with GitHub `origin`, `main`, and `dev` workflow |
 | API skeleton | Complete | FastAPI app, `/health`, generated `/docs`, and JobPosting routes |
-| Project documentation | Foundation complete | README and Karrot Identity Service case study define current scope and roadmap |
+| Project documentation | Foundation complete | English/Korean READMEs and Carrot Identity Service case study define current scope and roadmap |
 | Testing | Complete | pytest health, settings, DB, model, schema, service, and route tests |
 | Configuration | Complete | Typed `pydantic-settings`, optional `.env`, cached settings |
 | Database foundation | Complete | SQLAlchemy 2.0 engine, session factory, base, and `get_db()` |

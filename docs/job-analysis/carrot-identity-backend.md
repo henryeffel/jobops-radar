@@ -1,4 +1,4 @@
-# Karrot Identity Service Backend Case Study
+# Carrot Identity Service Backend Case Study
 
 ## Purpose
 

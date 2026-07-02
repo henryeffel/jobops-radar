@@ -2,9 +2,10 @@
 
 ## Current state
 
-- `README.md` now defines the product purpose, current implementation, local
-  setup, environment variables, API surface, CI behavior, and roadmap.
-- The Karrot Identity Service Backend posting is documented as the first case
+- `README.md` and the interview-oriented Korean `README.ko.md` define the
+  product purpose, current implementation, local setup, environment variables,
+  API surface, CI behavior, roadmap, and explicit non-implemented scope.
+- The Carrot Identity Service Backend posting is documented as the first case
   study under `docs/job-analysis/`. It guides future OIDC, B2B account,
   security/privacy, availability, authentication UX, and audit-log work without
   claiming those capabilities are implemented.

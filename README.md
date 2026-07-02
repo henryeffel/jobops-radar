@@ -1,5 +1,7 @@
 # JobOps Radar
 
+[한국어 README](README.ko.md)
+
 JobOps Radar is a FastAPI backend portfolio project for storing real job
 postings, structuring job-description requirements, comparing those requirements
 with a candidate profile, and generating explainable skill-gap insights and
@@ -17,11 +19,11 @@ seekers save postings as unstructured links or notes.
 
 JobOps Radar aims to turn a posting into durable, testable backend data and,
 later, into an evidence-based preparation plan. The first case study is the
-Karrot Identity Service Backend posting. Its identity-platform context will guide
+Carrot Identity Service Backend posting. Its identity-platform context will guide
 future Auth, OIDC, security, privacy, organization-account, and audit-log work
 without forcing those features into the initial storage API.
 
-See [Karrot Identity Service Backend case study](docs/job-analysis/karrot-identity-backend.md).
+See [Carrot Identity Service Backend case study](docs/job-analysis/carrot-identity-backend.md).
 
 ## Current Features
 
@@ -174,14 +176,14 @@ with `pyproject.toml`.
 The roadmap keeps the core job-analysis product ahead of identity-platform
 expansion:
 
-1. Persist and document real job postings, beginning with the Karrot Identity
+1. Persist and document real job postings, beginning with the Carrot Identity
    Service Backend case study.
 2. Add structured JD requirement persistence and manually curated extraction
    workflows before introducing an LLM.
 3. Add candidate-profile and evidence models.
 4. Produce deterministic, explainable skill-gap comparisons and preparation
    roadmaps.
-5. Use the Karrot case study to design B2B organization/account boundaries,
+5. Use the Carrot case study to design B2B organization/account boundaries,
    secure authentication UX, privacy controls, and audit events.
 6. Add Auth and OIDC only after their domain model and threat assumptions are
    documented and tested.
