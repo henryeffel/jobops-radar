@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine, func, select
@@ -11,6 +12,7 @@ from app.services import (
     DuplicateJobPostingError,
     create_job_posting,
     get_job_posting_by_identity,
+    list_job_postings,
 )
 
 
@@ -35,6 +37,34 @@ def build_mock_posting(external_id: str = "mock-service-001") -> JobPostingCreat
         location="Seoul",
         raw_payload={"provider": "mock"},
     )
+
+
+def seed_pagination_postings(
+    db_session: Session,
+    total: int = 4,
+) -> None:
+    timestamps = [
+        datetime(2026, 1, 1, tzinfo=timezone.utc),
+        datetime(2026, 1, 3, tzinfo=timezone.utc),
+        datetime(2026, 1, 2, tzinfo=timezone.utc),
+        datetime(2026, 1, 3, tzinfo=timezone.utc),
+    ]
+    timestamps.extend(
+        datetime(2025, 1, 1, tzinfo=timezone.utc)
+        for _ in range(max(0, total - len(timestamps)))
+    )
+    for index, created_at in enumerate(timestamps[:total], start=1):
+        db_session.add(
+            JobPosting(
+                source="mock",
+                external_id=f"page-{index}",
+                company_name="Example Company",
+                title=f"Posting {index}",
+                raw_payload={},
+                created_at=created_at,
+            )
+        )
+    db_session.commit()
 
 
 def test_create_job_posting_through_service(db_session: Session) -> None:
@@ -85,3 +115,50 @@ def test_duplicate_input_does_not_create_second_row(
     assert count == 1
     assert found is not None
     assert found.id == original.id
+
+
+def test_list_job_postings_uses_default_pagination(
+    db_session: Session,
+) -> None:
+    seed_pagination_postings(db_session, total=21)
+
+    postings = list_job_postings(db_session)
+
+    assert len(postings) == 20
+
+
+def test_list_job_postings_applies_limit(db_session: Session) -> None:
+    seed_pagination_postings(db_session)
+
+    postings = list_job_postings(db_session, limit=2)
+
+    assert [posting.external_id for posting in postings] == [
+        "page-4",
+        "page-2",
+    ]
+
+
+def test_list_job_postings_applies_offset(db_session: Session) -> None:
+    seed_pagination_postings(db_session)
+
+    postings = list_job_postings(db_session, offset=2)
+
+    assert [posting.external_id for posting in postings] == [
+        "page-3",
+        "page-1",
+    ]
+
+
+def test_list_job_postings_has_deterministic_order(
+    db_session: Session,
+) -> None:
+    seed_pagination_postings(db_session)
+
+    postings = list_job_postings(db_session)
+
+    assert [posting.external_id for posting in postings] == [
+        "page-4",
+        "page-2",
+        "page-3",
+        "page-1",
+    ]

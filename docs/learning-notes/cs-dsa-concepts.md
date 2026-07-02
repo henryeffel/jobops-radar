@@ -69,6 +69,19 @@ This gives clients safe retry behavior after uncertain network outcomes. No new
 DSA was introduced; idempotency is a distributed-systems/API correctness
 property.
 
+## Total Ordering for Pagination
+
+Sorting only by `created_at` defines a partial order because multiple rows can
+share one timestamp. The lexicographic key `(created_at, id)`, with unique `id`
+as the final component, defines a total order. This makes page slicing
+deterministic for an unchanged dataset. No major DSA was added; the relevant CS
+concepts are ordering relations and deterministic query results.
+
+`LIMIT` bounds the number of returned rows, while `OFFSET` skips a prefix of the
+ordered result. Large offsets may still require the database to scan or discard
+many rows, which is one reason cursor pagination may be preferable at larger
+scale.
+
 ## Future Concepts
 
 ### Hashing

@@ -35,6 +35,23 @@ def get_job_posting_by_identity(
     return db.scalar(statement)
 
 
+def list_job_postings(
+    db: Session,
+    limit: int = 20,
+    offset: int = 0,
+) -> list[JobPosting]:
+    statement = (
+        select(JobPosting)
+        .order_by(
+            JobPosting.created_at.desc(),
+            JobPosting.id.desc(),
+        )
+        .limit(limit)
+        .offset(offset)
+    )
+    return list(db.scalars(statement).all())
+
+
 def create_job_posting(
     db: Session,
     data: JobPostingCreate,

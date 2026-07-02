@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -48,6 +49,32 @@ def build_payload(external_id: str = "mock-route-001") -> dict[str, object]:
         "location": "Seoul",
         "raw_payload": {"provider": "mock"},
     }
+
+
+def seed_pagination_postings(engine: Engine, total: int = 4) -> None:
+    timestamps = [
+        datetime(2026, 1, 1, tzinfo=timezone.utc),
+        datetime(2026, 1, 3, tzinfo=timezone.utc),
+        datetime(2026, 1, 2, tzinfo=timezone.utc),
+        datetime(2026, 1, 3, tzinfo=timezone.utc),
+    ]
+    timestamps.extend(
+        datetime(2025, 1, 1, tzinfo=timezone.utc)
+        for _ in range(max(0, total - len(timestamps)))
+    )
+    with Session(engine) as session:
+        for index, created_at in enumerate(timestamps[:total], start=1):
+            session.add(
+                JobPosting(
+                    source="mock",
+                    external_id=f"page-{index}",
+                    company_name="Example Company",
+                    title=f"Posting {index}",
+                    raw_payload={},
+                    created_at=created_at,
+                )
+            )
+        session.commit()
 
 
 def test_create_job_posting_route(
@@ -129,9 +156,88 @@ def test_missing_job_posting_returns_404(
     assert by_source.status_code == 404
 
 
+def test_list_job_postings_route(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_pagination_postings(engine, total=21)
+
+    response = client.get("/job-postings")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 20
+
+
+def test_list_job_postings_route_applies_limit(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_pagination_postings(engine)
+
+    response = client.get("/job-postings", params={"limit": 2})
+
+    assert response.status_code == 200
+    assert [item["external_id"] for item in response.json()] == [
+        "page-4",
+        "page-2",
+    ]
+
+
+def test_list_job_postings_route_applies_offset(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_pagination_postings(engine)
+
+    response = client.get("/job-postings", params={"offset": 2})
+
+    assert response.status_code == 200
+    assert [item["external_id"] for item in response.json()] == [
+        "page-3",
+        "page-1",
+    ]
+
+
+def test_list_job_postings_route_has_deterministic_order(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_pagination_postings(engine)
+
+    response = client.get("/job-postings")
+
+    assert [item["external_id"] for item in response.json()] == [
+        "page-4",
+        "page-2",
+        "page-3",
+        "page-1",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("limit", 0),
+        ("limit", 101),
+        ("offset", -1),
+    ],
+)
+def test_list_job_postings_route_rejects_invalid_pagination(
+    api_context: tuple[TestClient, Engine],
+    parameter: str,
+    value: int,
+) -> None:
+    client, _ = api_context
+
+    response = client.get("/job-postings", params={parameter: value})
+
+    assert response.status_code == 422
+
+
 def test_openapi_contains_job_posting_routes() -> None:
     paths = app.openapi()["paths"]
 
     assert "/job-postings" in paths
+    assert "get" in paths["/job-postings"]
     assert "/job-postings/{job_posting_id}" in paths
     assert "/job-postings/by-source/{source}/{external_id}" in paths
