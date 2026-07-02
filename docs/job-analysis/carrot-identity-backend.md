@@ -89,7 +89,10 @@ This documentation does not authorize or implement:
 - AWS deployment resources
 - production availability claims
 
-The next implementation step should remain in the core analysis domain: store
-structured, manually curated JD requirements for a posting, with schemas,
-migrations, services, and tests. Auth/OIDC design can follow after the analysis
-model establishes why those capabilities are relevant.
+Structured, manually curated JD requirement storage now exists at the model,
+schema, migration, and service layers. The six case-study themes are covered by
+service test data; they are not seeded into production data.
+
+The next implementation step should expose small nested create/list API
+operations for these requirements. Auth/OIDC design can follow only after the
+analysis model establishes why those capabilities are relevant.

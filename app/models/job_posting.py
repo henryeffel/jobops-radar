@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     Boolean,
@@ -10,9 +10,12 @@ from sqlalchemy import (
     func,
     true,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.job_requirement import JobRequirement
 
 
 def utc_now() -> datetime:
@@ -67,4 +70,7 @@ class JobPosting(Base):
         onupdate=utc_now,
         server_default=func.now(),
         nullable=False,
+    )
+    requirements: Mapped[list["JobRequirement"]] = relationship(
+        back_populates="job_posting",
     )

@@ -8,9 +8,9 @@ JobOps Radar는 실제 채용공고를 저장하고, JD 요구 역량을 구조�
 경험과 비교하고, 설명 가능한 역량 차이와 준비 로드맵을 제공하는 FastAPI
 백엔드 프로젝트입니다.
 
-현재는 채용공고 저장 API와 데이터베이스 기반을 구현한 단계입니다. JD 분석,
-지원자 프로필, Auth/OIDC, LLM 연동은 아직 구현하지 않았으며 로드맵에서
-명확하게 분리하고 있습니다.
+현재는 채용공고 API와 구조화된 JD 요구사항의 모델·서비스 저장 계층까지
+구현한 단계입니다. 분석 요약, 지원자 프로필, Auth/OIDC, LLM 연동은 아직
+구현하지 않았으며 로드맵에서 명확하게 분리하고 있습니다.
 
 첫 사례 연구는 Carrot Identity Service Backend 공고입니다. 이 공고에서
 도출한 OIDC, B2B 조직 계정, 보안·개인정보, 고가용성, 인증 UX 요구사항을
@@ -40,10 +40,13 @@ JobOps Radar는 공고 원문, 구조화된 요구사항, 지원자 근거, 비�
 | 중복 방지 | 완료 | `(source, external_id)` DB unique constraint |
 | 목록 조회 | 완료 | bounded limit/offset 페이지네이션 |
 | 정렬 안정성 | 완료 | `created_at DESC, id DESC` 결정적 정렬 |
-| 스키마 변경 | 완료 | Alembic 초기 migration |
+| 구조화 JD 요구사항 | 완료 | `JobRequirement` 모델·스키마·서비스 |
+| 요구사항 제약 | 완료 | 공고 FK, importance 1~5, source 기본값 |
+| 스키마 변경 | 완료 | JobPosting/JobRequirement Alembic migration |
 | 테스트 | 완료 | 서비스·라우트·모델·스키마·설정·DB 테스트 |
 | CI | 완료 | GitHub Actions 테스트, migration, compile 검증 |
-| JD 요구사항 분석 | 미구현 | 다음 구현 단계 |
+| JobRequirement API | 미구현 | 다음 구현 단계 |
+| JD 분석 요약 | 미구현 | 후속 단계 |
 | 지원자 프로필/비교 | 미구현 | 후속 단계 |
 | Auth/OIDC/AuditLog | 미구현 | Carrot 사례 기반 미래 확장 |
 | LLM/AWS 배포 | 미구현 | 현재 범위 밖 |
@@ -59,7 +62,7 @@ HTTP request
     ↓
 FastAPI route / validation
     ↓
-JobPosting service
+JobPosting / JobRequirement service
     ↓
 SQLAlchemy session
     ↓
@@ -191,16 +194,17 @@ pip install -e ".[dev]"
 
 1. 실제 채용공고 저장과 사례 문서화
 2. 수동으로 검토한 구조화 JD 요구사항 모델·migration·service 구현
-3. 지원자 프로필과 경험 근거 모델 구현
-4. 결정적이고 설명 가능한 skill-gap 비교
-5. 준비 우선순위와 학습 로드맵 생성
-6. Carrot 사례에 근거한 B2B 조직 계정·보안·AuditLog 설계
-7. 위협 모델과 protocol 경계를 문서화한 후 Auth/OIDC 구현
-8. PostgreSQL 운영 검증과 고가용성 설계 후 AWS 배포 검토
-9. 검토 가능한 보조 계층으로 LLM 도입 여부 평가
+3. 공고 하위 JobRequirement 생성·목록 API 추가
+4. 지원자 프로필과 경험 근거 모델 구현
+5. 결정적이고 설명 가능한 skill-gap 비교
+6. 준비 우선순위와 학습 로드맵 생성
+7. Carrot 사례에 근거한 B2B 조직 계정·보안·AuditLog 설계
+8. 위협 모델과 protocol 경계를 문서화한 후 Auth/OIDC 구현
+9. PostgreSQL 운영 검증과 고가용성 설계 후 AWS 배포 검토
+10. 검토 가능한 보조 계층으로 LLM 도입 여부 평가
 
-다음 PR은 LLM 없이 수동으로 구조화한 JD 요구사항을 저장하는 최소 모델,
-Alembic migration, Pydantic schema, service와 테스트를 추가하는 단계입니다.
+1~2단계는 구현됐습니다. 다음 PR은 기존 서비스 계층을 사용하는 작은
+JobRequirement 생성·목록 API와 라우트 테스트를 추가하는 단계입니다.
 
 ## 면접에서 설명할 핵심
 
@@ -209,6 +213,8 @@ Alembic migration, Pydantic schema, service와 테스트를 추가하는 단계�
   보장합니다.
 - 페이지네이션은 응답 크기를 제한하고 unique tie-breaker로 순서를
   결정적으로 만듭니다.
+- `JobRequirement`는 외래 키로 공고에 연결하고 importance 범위를 API
+  입력뿐 아니라 DB `CHECK` 제약으로도 보호합니다.
 - CI와 로컬은 `pyproject.toml`의 동일한 dependency definition을 사용합니다.
 - SQLite는 현재 개발 편의용이며 PostgreSQL이 목표 운영 DB입니다.
 - Carrot 사례는 Auth 기능을 성급히 추가하기 위한 명분이 아니라, 요구사항과

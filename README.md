@@ -7,9 +7,9 @@ postings, structuring job-description requirements, comparing those requirements
 with a candidate profile, and generating explainable skill-gap insights and
 preparation roadmaps.
 
-The project is being built incrementally. The current repository provides the
-job-posting storage foundation; JD analysis, candidate comparison, authentication,
-and AI-assisted features remain roadmap items.
+The project is being built incrementally. The current repository provides
+job-posting and structured JD-requirement storage; analysis summaries, candidate
+comparison, authentication, and AI-assisted features remain roadmap items.
 
 ## Why This Project Exists
 
@@ -30,7 +30,7 @@ See [Carrot Identity Service Backend case study](docs/job-analysis/carrot-identi
 - FastAPI application with generated OpenAPI and Swagger UI documentation.
 - Health endpoint.
 - SQLAlchemy 2.0 database engine, session lifecycle, and declarative models.
-- Alembic migration for the `job_postings` table.
+- Alembic migrations for `job_postings` and `job_requirements`.
 - Provider-neutral `JobPosting` storage for manual, mock, or future provider
   data.
 - Database-enforced uniqueness for `(source, external_id)`.
@@ -38,11 +38,17 @@ See [Carrot Identity Service Backend case study](docs/job-analysis/carrot-identi
 - Create-or-get behavior and lookup by database or source identity.
 - Bounded `limit`/`offset` listing ordered by
   `created_at DESC, id DESC`.
+- Structured `JobRequirement` storage linked to an existing `JobPosting`.
+- Requirement types for skill, experience, security, operations, architecture,
+  culture, and language.
+- Pydantic and database validation for importance values from 1 through 5.
+- Requirement create, lookup, and per-posting list services. No requirement API
+  endpoints have been added yet.
 - Service, route, schema, model, configuration, database, and health tests.
 - GitHub Actions CI for tests, migrations, and source compilation.
 
-Auth, OIDC endpoints, JD analysis, candidate profiles, LLM integration, and AWS
-deployment are not implemented.
+Auth, OIDC endpoints, JD analysis summaries, candidate profiles, LLM
+integration, and AWS deployment are not implemented.
 
 ## Tech Stack
 
@@ -177,19 +183,20 @@ The roadmap keeps the core job-analysis product ahead of identity-platform
 expansion:
 
 1. Persist and document real job postings, beginning with the Carrot Identity
-   Service Backend case study.
-2. Add structured JD requirement persistence and manually curated extraction
-   workflows before introducing an LLM.
-3. Add candidate-profile and evidence models.
-4. Produce deterministic, explainable skill-gap comparisons and preparation
+   Service Backend case study. (Implemented)
+2. Store manually curated structured JD requirements before introducing an LLM.
+   (Implemented at the model and service layers)
+3. Expose small nested JobRequirement create/list API operations.
+4. Add candidate-profile and evidence models.
+5. Produce deterministic, explainable skill-gap comparisons and preparation
    roadmaps.
-5. Use the Carrot case study to design B2B organization/account boundaries,
+6. Use the Carrot case study to design B2B organization/account boundaries,
    secure authentication UX, privacy controls, and audit events.
-6. Add Auth and OIDC only after their domain model and threat assumptions are
+7. Add Auth and OIDC only after their domain model and threat assumptions are
    documented and tested.
-7. Validate high-availability and PostgreSQL operational concerns before adding
+8. Validate high-availability and PostgreSQL operational concerns before adding
    AWS deployment artifacts.
-8. Evaluate AI-assisted engineering workflows as an optional, reviewable layer;
+9. Evaluate AI-assisted engineering workflows as an optional, reviewable layer;
    deterministic application rules remain the source of final decisions.
 
 See `docs/adr/` for accepted architecture decisions and `handoff.md` for the

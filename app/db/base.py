@@ -6,6 +6,6 @@ class Base(DeclarativeBase):
 
 
 def load_models() -> None:
-    from app.models import JobPosting
+    from app.models import JobPosting, JobRequirement
 
-    _ = JobPosting
+    _ = JobPosting, JobRequirement
