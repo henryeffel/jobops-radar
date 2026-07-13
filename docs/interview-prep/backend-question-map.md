@@ -2,7 +2,8 @@
 
 This map connects common backend interview areas to concrete JobOps Radar
 decisions. It distinguishes demonstrated work from planned discussion so an
-interview answer does not claim unimplemented experience.
+interview answer does not claim unimplemented experience. Statuses reflect the
+repository after the internal Identity/Auth and AuditLog slice was added.
 
 ## Status Legend
 
@@ -29,13 +30,14 @@ Hash indexes support equality only and are unlikely to be the first choice.
 
 | Interview topic | Project-specific angle | Status |
 | --- | --- | --- |
-| B-Tree vs Hash index | Prefer B-Tree for external ID equality, posting-date ranges, and ordered lists; consider Hash only after an equality-only workload is measured | Planned |
+| B-Tree vs Hash index | The unique `(source, external_id)` identity and current lookup indexes use B-Tree; consider Hash only after an equality-only workload is measured | Partially implemented |
 | Covering index | A composite index with included display columns could avoid heap reads for a proven hot listing query, but should follow `EXPLAIN ANALYZE` evidence | Optional later |
 | Normalization vs denormalization | Normalize stable entities and relationships first; duplicate selected display fields only if measured read pressure justifies consistency costs | Planned |
 | N+1 query problem | Use explicit eager loading or projection for related company/skill data once relationships exist; confirm query counts in integration tests | Planned |
 
-No business model or index exists yet. SQLAlchemy and Alembic provide only the
-foundation.
+`JobPosting`, `JobRequirement`, `User`, and `AuditLog` models now exist. Unique
+and lookup indexes cover known identity and relationship queries, but production
+index claims still require PostgreSQL query-plan evidence.
 
 ## Transactions / Concurrency
 
@@ -57,7 +59,7 @@ safe under concurrent workers.
 | Isolation, Repeatable Read, MVCC | PostgreSQL MVCC provides consistent snapshots; default Read Committed is likely sufficient for simple imports, with stronger isolation chosen only for a demonstrated invariant | Planned |
 | Concurrency control and locking | Let uniqueness constraints arbitrate duplicate imports; keep transactions short and avoid broad explicit locks | Planned |
 | Optimistic vs pessimistic lock | Optimistic version checks fit rare profile/roadmap conflicts; row locks fit short, high-contention critical sections only | Optional later |
-| Duplicate prevention | Use a unique provider/external-ID key plus atomic insert/upsert inside a transaction | Planned |
+| Duplicate prevention | A unique provider/external-ID constraint arbitrates duplicates; the service catches conflicts and returns the existing record | Implemented locally |
 
 SQLite cannot validate PostgreSQL's full MVCC and locking behavior. Concurrency
 claims require PostgreSQL integration tests after Docker is available.
@@ -77,12 +79,13 @@ schemas, correct status codes, consistent error bodies, and pagination metadata.
 
 | Interview topic | Project-specific angle | Status |
 | --- | --- | --- |
-| REST response design | Return resource schemas directly for simple success, use `201` for creation, `404` for absence, `422` for validation, and a consistent error shape | Planned |
+| REST response design | Resource schemas, `201`, `404`, `409`, `422`, and a deliberately uniform `401` login failure are exercised by route tests | Partially implemented |
 | External API failure mapping | Apply timeouts and bounded retries internally; expose a controlled `502`/`503` rather than leaking Saramin client details | Planned |
 | API documentation | FastAPI-generated OpenAPI and Swagger UI at `/docs` document current routes | Implemented |
 
-Authentication and authorization response design remain out of scope until the
-core job workflow exists.
+Internal authentication responses are now implemented for register, login, and
+current-user lookup. Authorization roles, organization membership, token
+revocation, and OIDC remain outside the demonstrated scope.
 
 ## Testing
 
@@ -94,16 +97,17 @@ A healthy suite needs both rather than treating the labels as interchangeable.
 
 ### JobOps Radar connection
 
-Current tests cover the HTTP health contract, settings parsing, engine wiring,
-session creation, and an isolated SQLite connection. Future deterministic
-scoring should be heavily unit-tested, while repositories and migrations need
+Current tests cover health, settings, engine/session wiring, posting and
+requirement behavior, Identity/Auth success and failure paths, JWT validation,
+and security audit events using isolated SQLite databases. Future deterministic
+scoring needs focused unit tests, while repositories and migrations still need
 PostgreSQL integration tests.
 
 | Interview topic | Project-specific angle | Status |
 | --- | --- | --- |
 | Unit vs integration test | Pure scoring and normalization functions belong in unit tests; API, repository, and migration behavior need integration tests | Partially implemented |
 | Test isolation | Temporary SQLite avoids shared local state, but cannot replace PostgreSQL compatibility tests | Implemented locally; PostgreSQL planned |
-| CI test execution | Run linting/tests/migration checks on every pull request with a PostgreSQL service container | Planned |
+| CI test execution | GitHub Actions runs tests, SQLite migration checks, and source compilation; a PostgreSQL service container remains planned | Partially implemented |
 
 ## Caching / Rate Limiting
 
@@ -164,8 +168,10 @@ scoring in a pure domain module.
 
 | Interview topic | Project-specific angle | Status |
 | --- | --- | --- |
-| Service refactoring and SRP | Separate routers, services, repositories, external clients, and scoring only as each responsibility appears | Planned |
-| Dependency inversion | Inject repository/analyzer interfaces where tests or alternate implementations require them, including mock LLM analysis | Planned |
+| Service refactoring and SRP | Identity and Audit use router/service/repository boundaries; older posting code retains its existing layered structure | Partially implemented |
+| Dependency inversion | A provider protocol isolates fixture ingestion from the pending Saramin implementation; analyzer interfaces remain future work | Partially implemented |
 | MSA boundary decisions | Preserve internal module boundaries first; do not introduce network boundaries for portfolio optics | Out of scope for v1 |
 
-The current small application does not need a service layer yet.
+The application now uses service and repository boundaries where identity,
+audit, and persistence responsibilities justify them. It does not add layers to
+pure functions or create network boundaries for appearance.

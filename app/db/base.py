@@ -7,5 +7,7 @@ class Base(DeclarativeBase):
 
 def load_models() -> None:
     from app.models import JobPosting, JobRequirement
+    from app.audit.models import AuditLog
+    from app.identity.models import User
 
-    _ = JobPosting, JobRequirement
+    _ = JobPosting, JobRequirement, User, AuditLog

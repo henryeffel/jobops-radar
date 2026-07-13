@@ -1,14 +1,20 @@
 # Carrot Identity Service Backend Case Study
 
+> **Status note:** This was the initial analysis written before the Identity/Auth
+> slice. The current implementation evidence and explicit skill gaps are tracked
+> in `docs/case-studies/karrot-identity-service.md`. Historical reasoning below
+> is retained, while the scope summary at the end reflects the current code.
+
 ## Purpose
 
 This document records the first job-posting case study that will guide JobOps
 Radar's domain roadmap. It is a concise engineering interpretation of the
 posting, not an implementation claim or a verbatim archive of its text.
 
-The current codebase does not contain Auth, OIDC, organization-account,
-security-policy, audit-log, LLM, or high-availability features. Those concerns
-remain future work that must be designed and tested separately.
+The codebase now contains a narrow internal Auth flow and security AuditLog.
+It still does not contain OIDC, organization accounts, production security
+policy enforcement, LLM integration, or high-availability evidence. Those
+concerns remain separate future work.
 
 ## Posting Summary
 
@@ -76,23 +82,24 @@ The case study supplies a coherent target domain for later portfolio extensions:
   operational/security evidence.
 - Preparation roadmaps can sequence protocol study, data modeling, threat
   modeling, testing, and operations work.
-- Future Auth, OIDC, and AuditLog features can be justified by explicit case
-  study requirements rather than added as generic portfolio checkboxes.
+- The implemented internal Auth and AuditLog slice is justified by explicit
+  case-study requirements. Any future OIDC work must meet the same standard.
 
 ## Scope Boundary
 
-This documentation does not authorize or implement:
+This documentation does not authorize or claim:
 
-- Auth or user models
 - OIDC endpoints or identity-provider integration
+- refresh-token rotation, MFA, password recovery, or organization authorization
 - LLM calls
 - AWS deployment resources
 - production availability claims
 
-Structured, manually curated JD requirement storage now exists at the model,
-schema, migration, and service layers. The six case-study themes are covered by
-service test data; they are not seeded into production data.
+Structured JD requirement storage exists at the model, schema, migration, and
+service layers. Internal register/login/current-user behavior, Argon2 password
+hashing, PyJWT access tokens, and three audit events are implemented and tested.
+The fixture provider is isolated from the pending Saramin adapter.
 
-The next implementation step should expose small nested create/list API
-operations for these requirements. Auth/OIDC design can follow only after the
-analysis model establishes why those capabilities are relevant.
+Nested requirement API operations and fixture-to-persistence integration remain
+reasonable next steps. OIDC is explicitly a non-goal until a concrete relying
+party, key lifecycle, and production-grade provider strategy exist.

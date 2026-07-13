@@ -1,40 +1,16 @@
-# ADR 0006: Delay Frontend Development
+# ADR-0006: Frontend 구현 연기
 
-## Status
+## 상태
+승인됨
 
-Accepted
+## 배경
+한정된 시간에 backend domain과 검증을 우선해야 하며 Swagger UI로 초기 API를 확인할 수 있습니다.
 
-## Context
+## 결정
+공고·요구사항·분석 API가 안정되기 전까지 별도 frontend 구현을 연기합니다.
 
-The portfolio targets backend roles, and the deadline requires strict scope
-control. A frontend would add UI, state-management, and deployment work before
-the backend workflow is proven.
+## 결과
+Backend 완결성에 집중할 수 있지만 사용자 경험과 시각적 demo가 제한됩니다.
 
-## Decision
-
-Do not build a frontend in v1. Use OpenAPI `/docs`, automated tests, and API
-examples to demonstrate the backend.
-
-## Consequences
-
-### Positive
-
-- Prevents scope creep.
-- Keeps time focused on backend reliability and domain behavior.
-- Avoids coupling an unstable API to an early UI.
-
-### Negative / Trade-offs
-
-- Non-technical users have no dedicated interface.
-- Portfolio demonstrations rely more heavily on API documentation.
-
-## Alternatives Considered
-
-- Build a React or Next.js client alongside the API.
-- Add a minimal server-rendered dashboard.
-
-## Related Documents
-
-- [ADR 0002](0002-backend-first-mvp.md)
-- [Work summary](../work-summary.md)
-- [Backend concepts](../learning-notes/backend-concepts.md)
+## 전환 조건
+핵심 API 계약과 주요 실패 경로가 test로 안정되면 작은 읽기 중심 UI를 검토합니다.

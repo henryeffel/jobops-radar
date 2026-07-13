@@ -1,41 +1,17 @@
-# ADR 0002: Build a Backend-First MVP
+# ADR-0002: Backend-first MVP
 
-## Status
+## 상태
+승인됨
 
-Accepted
+## 배경
+핵심 가치는 공고 수집, 요구사항 구조화, 역량 차이 분석에 있으며 초기에는 한 명이 개발합니다.
 
-## Context
+## 결정
+Frontend보다 backend domain, API, persistence, test를 먼저 완성합니다.
 
-The MVP must be deployable before 2026-07-24 and is intended to demonstrate
-Python backend skills. Expanding backend and UI scope together would threaten
-delivery.
+## 결과
+핵심 규칙을 UI와 분리해 검증하고 목표 backend 역량을 선명하게 보여줄 수 있습니다. 반면 초기에는 사용자용 화면이 없고 API client나 Swagger UI가 필요합니다.
 
-## Decision
-
-Complete and deploy the backend workflow before adding any user interface.
-Prioritize API contracts, persistence, integrations, scoring, tests, and
-operations.
-
-## Consequences
-
-### Positive
-
-- Keeps effort aligned with the target backend role.
-- Reduces scope and makes backend behavior independently testable.
-- Improves the chance of delivering a coherent deployed MVP.
-
-### Negative / Trade-offs
-
-- The MVP has no polished end-user interface.
-- API behavior must be demonstrated through `/docs`, tests, and examples.
-
-## Alternatives Considered
-
-- Build frontend and backend in parallel.
-- Create a thin UI before core persistence and scoring are stable.
-
-## Related Documents
-
-- [Work summary](../work-summary.md)
-- [ADR 0006](0006-delay-frontend.md)
-- [Session logs](../session-logs/2026-06-29.md)
+## 검토한 대안
+- Full-stack 동시 개발: 시각적 결과는 빠르지만 핵심 backend 검증이 분산됩니다.
+- 문서만 작성: 결정은 남지만 실행 증거가 부족합니다.

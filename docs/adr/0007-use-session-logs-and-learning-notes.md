@@ -1,43 +1,17 @@
-# ADR 0007: Require Session Logs and Learning Notes
+# ADR-0007: Session log와 학습 노트 사용
 
-## Status
+## 상태
+승인됨
 
-Accepted
+## 배경
+포트폴리오는 최종 코드뿐 아니라 문제 해결 과정, 검증, 학습한 개념을 설명할 수 있어야 합니다.
 
-## Context
+## 결정
+작업 session별 목표·변경·검증·후속 작업을 기록하고, 재사용 가능한 개념은 별도 학습 노트로 관리합니다.
 
-Codex is used heavily during development. Without durable records, implementation
-reasoning, validation evidence, warnings, and learning outcomes can be lost
-between sessions.
+## 결과
+의사결정 이력과 면접 근거가 남습니다. 문서 유지 비용이 생기므로 코드에서 알 수 있는 내용을 반복하지 않고 판단과 검증에 집중합니다.
 
-## Decision
-
-Update `handoff.md` and a dated session log after every Codex task. Update the
-work summary and topic-based learning notes when their content materially
-changes.
-
-## Consequences
-
-### Positive
-
-- Preserves project context and design reasoning.
-- Supports interview review and learning.
-- Makes validation history and unresolved issues visible.
-
-### Negative / Trade-offs
-
-- Adds documentation overhead to every task.
-- Logs can drift unless they record actual results rather than intended work.
-
-## Alternatives Considered
-
-- Rely only on Git commit messages.
-- Keep informal notes outside the repository.
-- Generate documentation only at project completion.
-
-## Related Documents
-
-- [Session log template](../session-logs/2026-06-29.md)
-- [Work summary](../work-summary.md)
-- [Backend concepts](../learning-notes/backend-concepts.md)
-- [CS/DSA concepts](../learning-notes/cs-dsa-concepts.md)
+## 검토한 대안
+- Commit message만 사용: 간결하지만 학습 맥락과 실패 과정이 부족합니다.
+- 최종 회고만 작성: 비용은 낮지만 중간 판단을 잃기 쉽습니다.

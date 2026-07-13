@@ -1,134 +1,56 @@
-# Handoff
+# 작업 인계
 
-## Current state
+## 현재 상태
 
-- `README.md` and the interview-oriented Korean `README.ko.md` define the
-  product purpose, current implementation, local setup, environment variables,
-  API surface, CI behavior, roadmap, and explicit non-implemented scope.
-- The Carrot Identity Service Backend posting is documented as the first case
-  study under `docs/job-analysis/`. It guides future OIDC, B2B account,
-  security/privacy, availability, authentication UX, and audit-log work without
-  claiming those capabilities are implemented.
-- Minimal FastAPI application initialized.
-- `GET /health` returns `{"status": "ok"}`.
-- Environment and optional `.env` settings use cached `pydantic-settings`.
-- FastAPI title and version are sourced from application settings.
-- Settings include placeholders for database, JWT, Saramin, and LLM configuration;
-  no related integrations have been implemented.
-- SQLite is the current local-development fallback through
-  `DATABASE_URL=sqlite:///./jobops.db`.
-- PostgreSQL remains the default configuration and intended production target;
-  its local Docker Compose service is retained.
-- Docker Desktop installation is pending, so local PostgreSQL is not available
-  yet.
-- SQLAlchemy 2.0 provides a shared engine, session factory, declarative base, and
-  FastAPI `get_db()` dependency.
-- Alembic is initialized and reads the same `DATABASE_URL` as the application.
-- A provider-neutral `JobPosting` model stores mock/manual data now and can
-  support Saramin later. The database enforces unique `(source, external_id)`
-  pairs.
-- `JobPostingCreate` and `JobPostingRead` define validated persistence DTOs.
-  The job posting service creates records, retrieves them by source identity,
-  and translates duplicate conflicts into `DuplicateJobPostingError`.
-- FastAPI exposes `POST /job-postings`, `GET /job-postings`,
-  `GET /job-postings/{job_posting_id}`, and
-  `GET /job-postings/by-source/{source}/{external_id}`. Duplicate POSTs return
-  the existing record without inserting another row.
-- `GET /job-postings` uses bounded offset pagination. It defaults to
-  `limit=20&offset=0`, accepts limits from 1 through 100 and non-negative
-  offsets, and orders by `created_at DESC, id DESC`.
-- `JobRequirement` stores one structured JD requirement linked to an existing
-  `JobPosting`. It uses string requirement types, importance 1–5, optional
-  evidence, and `source="manual"` by default.
-- `JobRequirementCreate` and `JobRequirementRead` validate the persistence
-  contract. Services create, retrieve, and list requirements by posting in
-  deterministic `id ASC` order; no requirement API routes exist yet.
-- The database enforces the posting foreign key and importance range, and
-  indexes `job_posting_id` for per-posting lookup.
-- Two Alembic revisions create `job_postings` and `job_requirements`. The
-  current SQLite head is `6f3b6c2d8a91`.
-- Saramin Open API approval is pending. No Saramin client, access key
-  requirement, authentication, or user model has been added.
-- Project-specific backend interview notes are available in
-  `docs/interview-prep/`, with implemented and future topics labeled separately.
-- Architecture decisions are indexed in `docs/adr/README.md`; add or supersede
-  ADRs when a future task changes a consequential design decision.
-- Daily progress for 2026-06-30 is summarized in
-  `docs/daily-logs/2026-06-30.md`.
-- GitHub Actions runs on pushes and pull requests targeting `main` or `dev`.
-  CI installs the repository and development extras from `pyproject.toml` with
-  `pip install -e ".[dev]"`, then runs tests, migrations, and compilation.
+- 프로젝트의 기준 설명은 한국어 [README](README.md)입니다.
+- FastAPI는 `GET /health`, JobPosting API, `POST /auth/register`, `POST /auth/login`, `GET /users/me`를 제공합니다.
+- `JobPosting`은 공급자에 중립적인 공고를 저장하고 `(source, external_id)` unique constraint로 중복을 방지합니다.
+- `GET /job-postings`는 `limit=20&offset=0`을 기본값으로 사용하며 `created_at DESC, id DESC`로 정렬합니다.
+- `JobRequirement`는 공고에 연결된 구조화 요구사항을 저장하고 중요도 1~5를 application과 DB에서 검증합니다. Requirement API route는 아직 없습니다.
+- Identity module은 이메일을 정규화하고 Argon2로 비밀번호를 해싱하며 PyJWT access token을 발급합니다.
+- 알 수 없는 이메일과 잘못된 비밀번호는 같은 401 응답을 사용합니다.
+- Audit module은 `USER_REGISTERED`, `LOGIN_SUCCESS`, `LOGIN_FAILURE`를 기록하며 비밀번호·token·raw request는 저장하지 않습니다.
+- Fixture provider로 외부 API 승인과 개발을 분리했습니다. Saramin provider는 경계만 있고 구현되지 않았습니다.
+- SQLAlchemy 2.0과 Alembic을 사용하며 SQLite를 로컬 fallback, PostgreSQL을 운영 목표로 둡니다.
+- 현재 migration은 `job_postings`, `job_requirements`, `users`, `audit_logs`를 생성합니다.
+- 아키텍처, ADR, Karrot 사례 연구, 인증 설계, risk register, AI 협업 문서는 `docs/`에 있습니다.
 
-## Verification
+## 검증 상태
 
-- `python -m pytest -q -p no:cacheprovider`: 40 passed, including JobRequirement
-  parent linkage, type storage, importance validation, Carrot case-study data,
-  existing pagination, `/health`, and OpenAPI paths.
-- `python -m alembic check`: no new upgrade operations detected.
-- SQLite migration upgrade, `alembic check`, and downgrade passed.
-- PostgreSQL offline migration SQL generation passed.
-- Python source compilation passed.
-- Docker Compose runtime validation was skipped because Docker was not installed
-  in the implementation environment.
+- `python -m pytest -q -p no:cacheprovider`: 47개 test 통과
+- 빈 SQLite DB에서 `python -m alembic upgrade head`: 통과
+- `python -m alembic check`: model drift 없음
+- `python -m compileall -q app tests alembic`: 통과
+- 남은 warning은 FastAPI/Starlette TestClient의 upstream deprecation 1건입니다.
 
-## Run locally
+## 로컬 실행
 
-```bash
+```powershell
 python -m venv .venv
-pip install -e ".[dev]"
-cp .env.example .env
-alembic upgrade head
-uvicorn app.main:app --reload
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+Copy-Item .env.example .env
+python -m alembic upgrade head
+python -m uvicorn app.main:app --reload
 ```
 
-The active `DATABASE_URL` in `.env.example` uses SQLite. Do not commit the copied
-`.env` file.
+실제 비밀 키가 담긴 `.env`는 commit하지 않습니다. Docker Desktop 설치 후 PostgreSQL을 사용할 때는 `docker compose up -d`를 실행하고 `.env`의 `DATABASE_URL`을 변경한 뒤 migration을 다시 적용합니다.
 
-After Docker Desktop is installed, local PostgreSQL can be started with:
+## 명시적인 비목표
 
-```bash
-docker compose up -d
-```
+- 완전한 OIDC/OAuth Provider
+- Refresh token rotation, logout/revocation, MFA, password reset
+- 대규모 traffic 또는 고가용성 주장
+- Production Kubernetes·Microservices 배포
+- 승인 전 Saramin 자동 수집 또는 scraping
 
-Then replace `DATABASE_URL` in `.env` with the documented PostgreSQL target and
-run `alembic upgrade head` again.
+## 다음 권장 작업
 
-Run tests:
+1. 남아 있는 과거 영문 문서를 한국어화하고 오래된 상태 표현에는 시점 표시를 추가합니다.
+2. Identity test를 register/login/current-user/password/audit 목적별 파일로 분리합니다.
+3. Fixture를 읽어 JobPosting으로 저장하고 재입력 시 중복 row가 생기지 않는 통합 흐름을 구현합니다.
+4. 검증된 service를 이용해 작은 nested JobRequirement 생성·목록 API를 추가합니다.
 
-```bash
-python -m pytest -q -p no:cacheprovider
-```
+## 세션 기록 규칙
 
-Tests use a new in-memory SQLite engine per test and do not require a filesystem
-temp database. Do not pass a persistent or protected directory through
-`--basetemp`; pytest may clean and recreate the directory it owns. Future tests
-that genuinely need files should request pytest's `tmp_path` fixture without
-hardcoding its parent. `.tmp_pytest/` remains ignored for local troubleshooting
-artifacts.
-
-## Next recommended task
-
-Expose the tested JobRequirement service through small nested create/list API
-operations and route tests. Keep analysis summaries, LLM extraction, candidate
-profiles, and Auth/OIDC out of that PR.
-
-## Required session logging
-
-After every future Codex task:
-
-1. Update `handoff.md`.
-2. Create or update `docs/session-logs/YYYY-MM-DD.md` for the actual session
-   date.
-
-Update these cumulative documents only when the task materially changes their
-content:
-
-- `docs/work-summary.md`
-- `docs/learning-notes/backend-concepts.md`
-- `docs/learning-notes/cs-dsa-concepts.md`
-
-Every session entry must use the template in
-`docs/session-logs/2026-06-29.md` and include goal, actual changes, files,
-validation commands and results, backend concepts, CS/DSA concepts, design
-decisions, issues or warnings, and the next small task. If no major DSA was used,
-state that explicitly and document the closest relevant CS concept.
+향후 작업 후에는 실제 작업일의 `docs/session-logs/YYYY-MM-DD.md`와 이 문서를 갱신합니다. Session entry에는 목표, 실제 변경, 파일, 검증 명령과 결과, 관련 개념, 설계 결정, 문제·경고, 다음 작은 작업을 기록합니다. 중요한 아키텍처 결정이 바뀌면 기존 ADR을 조용히 수정하지 않고 새 ADR로 대체합니다.

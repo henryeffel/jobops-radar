@@ -8,9 +8,9 @@ planned work as complete.
 
 I chose FastAPI because JobOps Radar is an API-first Python backend and benefits
 from typed request/response validation, dependency injection, and automatic
-OpenAPI documentation. The current `/health` route and `/docs` already
-demonstrate the basic contract. Pydantic integrates naturally with the typed
-settings and future schemas. FastAPI also keeps the MVP small: I can add routers
+OpenAPI documentation. The current health, JobPosting, register, login, and
+current-user routes plus `/docs` demonstrate that contract. Pydantic integrates
+with typed settings and request/response schemas. FastAPI also keeps the MVP small: I can add routers
 and dependencies as behavior appears without adopting a large framework
 structure prematurely.
 
@@ -20,14 +20,18 @@ pool sizing, and measurement.
 
 ## How are tests structured?
 
-The suite currently has three focused areas:
+The suite currently covers these focused areas:
 
-- API tests use FastAPI's test client to verify `/health` status and payload.
+- API tests use FastAPI's test client to verify health, JobPosting, and Identity
+  contracts.
 - Settings tests verify defaults and environment-variable type conversion.
-- Database foundation tests verify engine URL wiring, session creation, and a
-  real temporary SQLite connection.
+- Database and domain tests verify engine/session wiring, models, uniqueness,
+  requirement validation, repositories, and migrations.
+- Security tests verify Argon2 password storage, uniform login failures,
+  valid/tampered/expired JWT behavior, current-user access, and audit events
+  without credentials or tokens.
 
-This is a small integration-oriented foundation. When deterministic scoring is
+This is a small integration-oriented suite with targeted security checks. When deterministic scoring is
 added, its rules should be pure unit tests with boundary and tie cases. Repository
 and migration behavior should be tested against PostgreSQL in CI because SQLite
 does not reproduce all PostgreSQL semantics. Tests must remain isolated and must

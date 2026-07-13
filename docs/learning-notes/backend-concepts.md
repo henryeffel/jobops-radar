@@ -45,18 +45,40 @@ The engine owns dialect and connection-pool behavior for a database URL. It does
 not represent one permanent connection. `SessionLocal` is a configured factory
 that creates individual sessions bound to that engine.
 
-## Alembic Migration Foundation
+## Alembic Migration 관리
 
 Alembic versions database schema changes. Its environment imports SQLAlchemy
-metadata and uses the same `DATABASE_URL` as the application. The foundation is
-ready, but no revision exists because there are no models yet.
+metadata and uses the same `DATABASE_URL` as the application. Three revisions
+currently create `job_postings`, `job_requirements`, `users`, and `audit_logs`.
+`alembic check` is used to detect drift between model metadata and migrations.
 
 ## Pytest API and Database Testing
 
 FastAPI's test client sends HTTP-style requests to the application without
 starting a separate server. Assertions verify response status and payload.
-Database foundation tests verify URL wiring, session creation, and a real
-temporary SQLite connection without requiring PostgreSQL.
+The suite now covers configuration and database wiring, posting and requirement
+models/services/routes, Identity/Auth success and failure paths, JWT rejection,
+and audit-event data minimization using isolated SQLite databases.
+
+## 내부 인증과 비밀번호 저장
+
+Identity module은 이메일을 정규화하고 Argon2로 비밀번호를 해싱합니다.
+로그인 실패 응답은 존재하지 않는 이메일과 잘못된 비밀번호를 구분하지 않아
+계정 존재 여부 노출을 줄입니다. 이 동작은 rate limiting, MFA, 비밀번호 복구를
+대신하지 않으며 해당 기능은 현재 비목표입니다.
+
+## JWT 검증 경계
+
+Access token은 `sub`, `iat`, `exp`, `type` claim을 포함합니다. Decoder는
+허용 algorithm을 고정하고 필수 claim과 token type을 검사하며, DB에서 사용자가
+없거나 비활성 상태이면 접근을 거부합니다. 현재 HS256 공유 비밀 키 방식에는
+rotation과 revocation이 없다는 한계가 있습니다.
+
+## 보안 감사 이벤트
+
+`USER_REGISTERED`, `LOGIN_SUCCESS`, `LOGIN_FAILURE`는 인증 결과를 추적할 수
+있게 하지만 비밀번호, token, raw request를 저장하지 않습니다. Audit log는
+관측과 사후 검토를 돕지만 authorization이나 침입 방지 장치 자체는 아닙니다.
 
 ## SQLAlchemy 2.0 Mapped Model
 
