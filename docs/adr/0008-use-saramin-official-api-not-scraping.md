@@ -1,41 +1,17 @@
-# ADR 0008: Use the Saramin Official API, Not Scraping
+# ADR-0008: Scraping 대신 Saramin 공식 API 사용
 
-## Status
+## 상태
+승인됨
 
-Accepted, implementation pending
+## 배경
+채용공고 자동 수집에는 안정적인 계약과 합법적 사용 경계가 필요합니다. HTML scraping은 화면 변경, 이용 약관, 차단 위험에 취약합니다.
 
-## Context
+## 결정
+자동 수집은 공식 Saramin API 승인 후 구현하며 scraping은 사용하지 않습니다. 승인 전에는 수동 fixture adapter로 개발합니다.
 
-JobOps Radar needs real job posting metadata. Scraping unauthorized job boards is
-fragile, creates compliance concerns, and expands maintenance scope.
+## 결과
+공급자 계약이 명확하고 유지보수 위험이 낮아집니다. 반면 승인 지연과 API 제공 필드 제한의 영향을 받습니다.
 
-## Decision
-
-Integrate only with the Saramin official Job Search API for v1 metadata imports.
-Do not scrape Saramin pages or JobKorea, Wanted, LinkedIn, or other job boards.
-
-## Consequences
-
-### Positive
-
-- Uses a documented and authorized integration boundary.
-- Reduces breakage from webpage layout changes.
-- Keeps provider scope and maintenance manageable.
-
-### Negative / Trade-offs
-
-- Data is limited by Saramin's API fields, availability, and quotas.
-- Upstream outages and API changes still require defensive handling.
-- JD enrichment may require explicit manual input when the API lacks text.
-
-## Alternatives Considered
-
-- Scrape multiple job boards.
-- Use unofficial aggregators.
-- Use only manually entered postings.
-
-## Related Documents
-
-- [Backend question map](../interview-prep/backend-question-map.md)
-- [JobOps answer bank](../interview-prep/jobops-answer-bank.md)
-- [ADR 0002](0002-backend-first-mvp.md)
+## 검토한 대안
+- HTML scraping: 즉시 시작할 수 있지만 안정성과 정책 위험이 큽니다.
+- 자동 수집 중단: 안전하지만 adapter 설계와 수집 흐름 검증이 늦어집니다.

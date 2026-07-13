@@ -1,42 +1,16 @@
-# ADR 0003: Use SQLite as a Temporary Local Fallback
+# ADR-0003: PostgreSQL 이전 SQLite fallback 사용
 
-## Status
+## 상태
+승인됨
 
-Accepted, temporary
+## 배경
+운영 목표 DB는 PostgreSQL이지만 로컬 Docker 환경이 준비되지 않아 개발이 멈출 위험이 있었습니다.
 
-## Context
+## 결정
+SQLAlchemy와 Alembic 경계를 유지하면서 로컬 개발과 test에는 SQLite를 허용합니다. PostgreSQL을 최종 목표로 유지합니다.
 
-Docker Desktop is not installed, so local PostgreSQL is currently unavailable.
-Database foundation work must continue without changing the production target.
+## 결과
+외부 환경 없이 개발할 수 있지만 PostgreSQL 전용 타입, constraint, query plan 차이는 별도로 검증해야 합니다. SQLite 통과를 운영 호환성 증거로 간주하지 않습니다.
 
-## Decision
-
-Use `sqlite:///./jobops.db` for temporary local development. Retain PostgreSQL
-with Docker Compose as the default architecture and final deployment target.
-
-## Consequences
-
-### Positive
-
-- Removes the immediate local infrastructure blocker.
-- Supports SQLAlchemy, Alembic, and isolated connection tests.
-- Requires no local database server.
-
-### Negative / Trade-offs
-
-- SQLite differs from PostgreSQL in typing, locking, concurrency, and SQL.
-- SQLite tests cannot prove PostgreSQL transaction or index behavior.
-- PostgreSQL integration testing is still required before deployment.
-
-## Alternatives Considered
-
-- Pause database work until Docker is installed.
-- Install PostgreSQL directly on Windows.
-- Change the final database to SQLite.
-
-## Related Documents
-
-- [Work summary](../work-summary.md)
-- [Backend question map](../interview-prep/backend-question-map.md)
-- `.env.example`
-- `docker-compose.yml`
+## 전환 조건
+Docker 또는 관리형 PostgreSQL 환경을 확보하면 migration과 통합 test를 PostgreSQL에서도 실행합니다.

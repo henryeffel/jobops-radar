@@ -1,42 +1,17 @@
-# ADR 0005: Use Deterministic Fit Scoring
+# ADR-0005: 결정론적인 적합도 점수 사용
 
-## Status
+## 상태
+승인됨
 
-Accepted, implementation pending
+## 배경
+역량 차이 결과는 설명 가능하고 같은 입력에 같은 결과를 내야 합니다. 초기부터 LLM 판단에 의존하면 test와 원인 분석이 어려워집니다.
 
-## Context
+## 결정
+구조화된 requirement, 중요도, 필수 여부, 보유 근거를 이용한 결정론적 규칙을 점수의 기준으로 사용합니다. AI는 추출이나 설명 초안을 보조할 수 있지만 최종 규칙을 소유하지 않습니다.
 
-Job fit scores must be explainable, reproducible, and testable. Direct LLM
-scoring can vary with prompts, models, and repeated calls.
+## 결과
+결과를 재현하고 unit test로 검증할 수 있습니다. 반면 단순 규칙은 맥락을 충분히 반영하지 못할 수 있어 실제 사례로 가중치를 조정해야 합니다.
 
-## Decision
-
-Use an LLM or mock analyzer only to extract structured JD signals. Validate those
-signals, then calculate the final fit score with deterministic application code
-and documented weights.
-
-## Consequences
-
-### Positive
-
-- Identical validated inputs produce identical scores.
-- Weighting, caps, missing values, and tie-breaking can be unit-tested.
-- Score explanations can identify contributing factors.
-
-### Negative / Trade-offs
-
-- Rules and weights require explicit design and calibration.
-- Structured extraction errors can still affect the deterministic result.
-- The approach may capture less nuance than unconstrained model judgment.
-
-## Alternatives Considered
-
-- Ask an LLM to return the final numeric score.
-- Use embeddings and a vector database for similarity scoring.
-- Manually score every posting.
-
-## Related Documents
-
-- [CS/DSA concepts](../learning-notes/cs-dsa-concepts.md)
-- [JobOps answer bank](../interview-prep/jobops-answer-bank.md)
-- [ADR 0002](0002-backend-first-mvp.md)
+## 검토한 대안
+- LLM 단독 평가: 유연하지만 일관성과 설명 가능성이 부족합니다.
+- 점수 없이 서술만 제공: 읽기 쉽지만 공고 간 우선순위 비교가 어렵습니다.
