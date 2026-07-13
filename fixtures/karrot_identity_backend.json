@@ -1,0 +1,11 @@
+{
+  "source": "manual",
+  "external_id": "karrot-identity-service-backend-case-study",
+  "company_name": "Karrot",
+  "title": "Identity Service Backend Engineer",
+  "location": "Seoul",
+  "raw_payload": {
+    "note": "Manually curated portfolio fixture; not a live posting snapshot",
+    "topics": ["identity", "OIDC", "security", "high availability"]
+  }
+}
