@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "local-only-change-me-32-bytes-minimum"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    auth_verify_max_concurrency: int = 2
+    auth_verify_wait_timeout_seconds: float = 3
     saramin_access_key: str = ""
     saramin_api_base_url: str = "https://oapi.saramin.co.kr"
     llm_api_key: str = ""

@@ -9,6 +9,7 @@ from app.identity.models import User
 from app.identity.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
 from app.identity.security import create_access_token
 from app.identity.service import DuplicateEmailError, InvalidCredentialsError, authenticate, register
+from app.identity.verification_guard import VerificationCapacityError
 
 router = APIRouter(tags=["identity"])
 
@@ -27,6 +28,11 @@ def login(data: LoginRequest, db: Annotated[Session, Depends(get_db)]):
         user = authenticate(db, data.email, data.password)
     except InvalidCredentialsError:
         raise HTTPException(status_code=401, detail="Invalid email or password") from None
+    except VerificationCapacityError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service is temporarily busy",
+        ) from None
     return TokenResponse(access_token=create_access_token(user.id))
 
 

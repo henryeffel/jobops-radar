@@ -1,5 +1,7 @@
 # 아키텍처 결정 기록
 
+- [ADR-0013: Bound concurrent password verification](0013-bound-password-verification-concurrency.md)
+
 ADR은 중요한 기술 선택의 배경, 결정, 결과를 짧게 기록합니다. 구현 코드만으로는 알기 어려운 판단 근거와 전환 조건을 보존하는 것이 목적입니다.
 
 ## 상태 정의

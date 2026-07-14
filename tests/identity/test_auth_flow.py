@@ -13,6 +13,8 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.identity.models import User
 from app.identity.security import create_access_token
+from app.identity.verification_guard import VerificationCapacityError
+from app.identity import service as identity_service
 from app.main import app
 
 # Keep cryptographic tests independent from a developer's local .env value.
@@ -76,6 +78,33 @@ def test_invalid_credentials_use_same_response(context, email, password):
     response = client.post("/auth/login", json={"email": email, "password": password})
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid email or password"}
+
+
+def test_verification_capacity_timeout_returns_503_then_next_request_proceeds(
+    context, monkeypatch
+):
+    client, _ = context
+    register(client)
+
+    class BusyOnceGuard:
+        def __init__(self):
+            self.calls = 0
+
+        def run(self, operation):
+            self.calls += 1
+            if self.calls == 1:
+                raise VerificationCapacityError
+            return operation()
+
+    monkeypatch.setattr(identity_service, "password_verification_guard", BusyOnceGuard())
+    monkeypatch.setattr(identity_service, "verify_password", lambda password, password_hash: True)
+
+    busy = client.post("/auth/login", json={"email": "dev@example.com", "password": "ignored"})
+    assert busy.status_code == 503
+    assert busy.json() == {"detail": "Authentication service is temporarily busy"}
+
+    recovered = client.post("/auth/login", json={"email": "dev@example.com", "password": "ignored"})
+    assert recovered.status_code == 200
 
 
 def test_tampered_and_expired_tokens_are_rejected(context):

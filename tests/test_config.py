@@ -8,6 +8,8 @@ def test_settings_defaults() -> None:
     assert settings.app_env == "development"
     assert settings.debug is False
     assert settings.access_token_expire_minutes == 30
+    assert settings.auth_verify_max_concurrency == 2
+    assert settings.auth_verify_wait_timeout_seconds == 3
     assert settings.llm_mock_mode is True
 
 

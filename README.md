@@ -1,5 +1,14 @@
 # JobOps Radar
 
+## Authentication verification capacity
+
+Password verification concurrency is bounded per application process. The
+defaults are `AUTH_VERIFY_MAX_CONCURRENCY=2` and
+`AUTH_VERIFY_WAIT_TIMEOUT_SECONDS=3`. Only Argon2 verification uses this guard;
+other login work is outside it. Each worker process has its own independent
+limit, so the deployment-wide maximum is the configured value multiplied by
+the number of workers and instances.
+
 JobOps Radar는 비정형 채용공고를 구조화된 요구사항과 검토 가능한 준비 계획으로 바꾸는 FastAPI 백엔드입니다. 이 저장소는 공고 분석 도메인과 의도적으로 범위를 좁힌 내부 인증 기능을 함께 보여줍니다.
 
 ## 1. 문제
