@@ -19,3 +19,5 @@ jobops.db-*
 .idea/
 .vscode/
 .DS_Store
+
+artifacts/comparison/
