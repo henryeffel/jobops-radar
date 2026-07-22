@@ -1,5 +1,14 @@
 # JobOps Radar
 
+## Authentication verification capacity
+
+Password verification concurrency is bounded per application process. The
+defaults are `AUTH_VERIFY_MAX_CONCURRENCY=2` and
+`AUTH_VERIFY_WAIT_TIMEOUT_SECONDS=3`. Only Argon2 verification uses this guard;
+other login work is outside it. Each worker process has its own independent
+limit, so the deployment-wide maximum is the configured value multiplied by
+the number of workers and instances.
+
 JobOps Radar는 비정형 채용공고를 구조화된 요구사항과 검토 가능한 준비 계획으로 바꾸는 FastAPI 백엔드입니다. 이 저장소는 공고 분석 도메인과 의도적으로 범위를 좁힌 내부 인증 기능을 함께 보여줍니다.
 
 ## 1. 문제
@@ -12,8 +21,9 @@ JobOps Radar는 비정형 채용공고를 구조화된 요구사항과 검토 �
 
 ## 3. 현재 구현 범위
 
-- `JobPosting` 저장·조회·페이지네이션과 `(source, external_id)` 기준 중복 방지
+- `JobPosting` 저장·조회, 회사·활성 상태 filter, 생성일·마감일 정렬, 페이지네이션과 `(source, external_id)` 기준 중복 방지
 - `JobRequirement` 관계 모델과 1~5 범위의 중요도 검증
+- 공고와 요구사항 묶음 저장의 단일 transaction, constraint 오류 변환과 전체 rollback
 - 수동 fixture provider와 아직 구현하지 않은 Saramin provider의 격리된 경계
 - `POST /auth/register`, `POST /auth/login`, `GET /users/me`
 - Argon2 비밀번호 해싱과 수명이 짧은 PyJWT access token
@@ -53,7 +63,7 @@ python -m compileall -q app tests alembic
 - OIDC/OAuth Provider가 아니며 외부 연합 로그인도 제공하지 않습니다.
 - Refresh token rotation, 로그아웃·폐기, MFA, 비밀번호 재설정, rate limiting은 구현하지 않았습니다.
 - HS256은 하나의 공유 비밀 키를 사용하며 운영 환경의 키 관리·교체는 구현하지 않았습니다.
-- Saramin 연동은 승인 대기 상태이며 fixture 데이터는 수동으로 관리합니다.
+- Saramin 연동은 현재 MVP에서 제외했으며 사용자 제공 URL·본문 입력과 수동 fixture를 사용합니다.
 
 ## 8. 로컬 실행
 
@@ -65,21 +75,47 @@ python -m alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
 
-Swagger UI는 <http://127.0.0.1:8000/docs>, 상태 확인 API는 <http://127.0.0.1:8000/health>에서 확인합니다.
+Swagger UI는 <http://127.0.0.1:8000/docs>에서 확인합니다. 프로세스 liveness는 <http://127.0.0.1:8000/health/live>, DB readiness는 <http://127.0.0.1:8000/health/ready>에서 확인하며 기존 `/health`도 호환성을 위해 유지합니다.
+
+모든 HTTP 응답에는 추적용 `X-Request-ID`가 포함됩니다. 서버는 request ID, method, path, status code와 latency를 JSON 완료 로그로 남기며 query string과 request body는 기록하지 않습니다.
 
 ## 9. 산출물 안내
 
+- [문서 인덱스](docs/README.md)
+- [Swagger 백엔드 MVP 상태](docs/project/mvp-status.md)
+- [MVP API 사용 가이드](docs/api/mvp-api-guide.md)
 - [아키텍처](docs/architecture/system-overview.md)
 - [Karrot 사례 연구](docs/case-studies/karrot-identity-service.md)
 - [인증 시스템 설계](docs/identity/auth-system-design.md)
 - [리스크 목록](docs/project/risk-register.md)
 - [AI 협업 개발](docs/ai-assisted-development.md)
+- [LLM 구조화 분석 오류 개선 기록](docs/experiments/llm-structured-analysis-troubleshooting.md)
 - [인증 테스트](tests/identity/test_auth_flow.py)
 
 ## 10. 로드맵
 
-1. 요구사항 하위 API와 결정론적인 역량 차이 비교 기능을 추가합니다.
+1. 실제 provider 성공·실패 경로의 관측 가능성을 보강하고 개인정보 동의·삭제 정책을 추가합니다.
 2. 공개 배포 전에 rate limiting과 운영 환경의 비밀 키 관리 방식을 추가합니다.
 3. Rotation, 재사용 탐지, 폐기 테스트를 함께 설계할 수 있을 때만 refresh token을 도입합니다.
-4. 공식 API 승인과 응답 계약 fixture가 준비된 뒤 Saramin adapter를 구현합니다.
+4. Saramin 연동은 MVP 범위에서 제외하며 공식 API 승인과 명확한 제품 필요가 함께 생길 때만 재검토합니다.
 5. ADR에 기록한 전환 조건이 발생했을 때만 서비스 분리를 다시 검토합니다.
+
+## 11. 사용자 프로필 입력
+
+인증된 사용자는 Markdown 이력서를 프로필로 저장할 수 있습니다. 서버는 원문에 없는 사실을 추측하지 않고 `summary`, `skills`, `projects`, `education`, `certifications` 항목을 결정론적으로 추출합니다. 이 구조화 데이터는 이후 채용공고 요구사항과 사용자 경험을 비교하는 입력으로 사용합니다.
+
+- `PUT /users/me/profile`: Markdown 이력서 생성 또는 갱신
+- `GET /users/me/profile`: 현재 사용자의 프로필 조회
+- `DELETE /users/me/profile`: 현재 사용자의 이력서 원문과 구조화 프로필 삭제
+- 요청 본문: `{"resume_markdown": "## SUMMARY\n..."}`
+- 두 API 모두 Bearer access token이 필요합니다.
+
+## 12. 채용공고 분석
+
+`POST /job-analyses`는 인증된 사용자의 저장된 프로필과 채용공고를 비교합니다. `source_url`로 공개 HTTP(S) 페이지를 가져오거나, 사이트가 자동 수집을 허용하지 않는 경우 `content`에 공고 HTML 또는 본문을 직접 전달할 수 있습니다. 결과에는 가중 적합도, 탐지된 요구사항, 공고 근거 문장, 일치·부족 기술과 준비 계획이 포함됩니다.
+
+`LLM_MOCK_MODE=false`이고 `LLM_API_KEY`가 설정된 환경에서는 NVIDIA OpenAI-compatible endpoint의 구조화 분석을 사용합니다. 서버는 공고와 이력서를 section ID 기반 JSON으로 만들고, LLM이 반환한 evidence ID가 실제 입력에 존재하는지 검증합니다. 요청 실패 또는 잘못된 JSON 응답에는 결정론적 분석으로 전환하고 응답의 `warnings`에 이를 표시합니다. API 키는 `.env`에만 두고 commit하지 않습니다.
+
+외부 LLM 전송은 매 분석 요청에서 `consent_to_external_llm=true`를 명시해야 합니다. 동의하지 않거나 LLM을 사용할 수 없으면 `analysis_method="deterministic"`과 `fallback_reason`을 반환합니다. 데이터 저장·전송·삭제 범위는 [사용자 데이터 처리 범위](docs/privacy/data-handling.md)에 정리했습니다.
+
+URL 수집은 사설·로컬 주소와 credential 포함 URL을 차단하고, redirect 횟수, 응답 크기와 요청 시간을 제한합니다. JavaScript 실행, 로그인, CAPTCHA 우회는 지원하지 않습니다.

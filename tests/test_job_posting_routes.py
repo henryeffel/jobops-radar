@@ -77,6 +77,29 @@ def seed_pagination_postings(engine: Engine, total: int = 4) -> None:
         session.commit()
 
 
+def seed_query_postings(engine: Engine) -> None:
+    rows = [
+        ("alpha-active", "Alpha", True, datetime(2026, 2, 10, tzinfo=timezone.utc)),
+        ("alpha-inactive", "Alpha", False, datetime(2026, 2, 5, tzinfo=timezone.utc)),
+        ("beta-active", "Beta", True, datetime(2026, 2, 1, tzinfo=timezone.utc)),
+        ("alpha-no-deadline", "Alpha", True, None),
+    ]
+    with Session(engine) as session:
+        for external_id, company_name, is_active, expiration_date in rows:
+            session.add(
+                JobPosting(
+                    source="mock",
+                    external_id=external_id,
+                    company_name=company_name,
+                    title=external_id,
+                    is_active=is_active,
+                    expiration_date=expiration_date,
+                    raw_payload={},
+                )
+            )
+        session.commit()
+
+
 def test_create_job_posting_route(
     api_context: tuple[TestClient, Engine],
 ) -> None:
@@ -212,6 +235,71 @@ def test_list_job_postings_route_has_deterministic_order(
         "page-3",
         "page-1",
     ]
+
+
+def test_list_job_postings_route_combines_company_and_active_filters(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_query_postings(engine)
+
+    response = client.get(
+        "/job-postings",
+        params={"company_name": "Alpha", "is_active": True},
+    )
+
+    assert response.status_code == 200
+    assert {item["external_id"] for item in response.json()} == {
+        "alpha-active",
+        "alpha-no-deadline",
+    }
+
+
+def test_list_job_postings_route_filters_inactive_and_then_paginates(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_query_postings(engine)
+
+    response = client.get(
+        "/job-postings",
+        params={"is_active": False, "limit": 1},
+    )
+
+    assert response.status_code == 200
+    assert [item["external_id"] for item in response.json()] == [
+        "alpha-inactive",
+    ]
+
+
+def test_list_job_postings_route_sorts_deadlines_ascending_and_null_last(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, engine = api_context
+    seed_query_postings(engine)
+
+    response = client.get(
+        "/job-postings",
+        params={"sort": "expiration_date"},
+    )
+
+    assert response.status_code == 200
+    assert [item["external_id"] for item in response.json()] == [
+        "beta-active",
+        "alpha-inactive",
+        "alpha-active",
+        "alpha-no-deadline",
+    ]
+
+
+def test_list_job_postings_route_rejects_unknown_sort(
+    api_context: tuple[TestClient, Engine],
+) -> None:
+    client, _ = api_context
+
+    response = client.get("/job-postings", params={"sort": "title"})
+
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize(
