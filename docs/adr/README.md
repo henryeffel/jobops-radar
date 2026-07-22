@@ -1,7 +1,5 @@
 # 아키텍처 결정 기록
 
-- [ADR-0013: Bound concurrent password verification](0013-bound-password-verification-concurrency.md)
-
 ADR은 중요한 기술 선택의 배경, 결정, 결과를 짧게 기록합니다. 구현 코드만으로는 알기 어려운 판단 근거와 전환 조건을 보존하는 것이 목적입니다.
 
 ## 상태 정의
@@ -20,11 +18,14 @@ ADR은 중요한 기술 선택의 배경, 결정, 결과를 짧게 기록합니�
 - [ADR-0005: 결정론적인 적합도 점수 사용](0005-use-deterministic-fit-scoring.md)
 - [ADR-0006: Frontend 구현 연기](0006-delay-frontend.md)
 - [ADR-0007: Session log와 학습 노트 사용](0007-use-session-logs-and-learning-notes.md)
-- [ADR-0008: Scraping 대신 Saramin 공식 API 사용](0008-use-saramin-official-api-not-scraping.md)
+- [ADR-0008: Scraping 대신 Saramin 공식 API 사용 — ADR-0014로 일부 대체](0008-use-saramin-official-api-not-scraping.md)
 - [ADR-0009: Microservices 대신 Modular Monolith 선택](0009-modular-monolith-over-microservices.md)
 - [ADR-0010: Saramin API 의존성 분리](0010-decouple-saramin-api.md)
 - [ADR-0011: 내부 인증에 PyJWT 사용](0011-pyjwt-for-internal-auth.md)
 - [ADR-0012: OIDC 구현 범위 제한](0012-limit-oidc-scope.md)
+- [ADR-0013: Bound concurrent password verification](0013-bound-password-verification-concurrency.md)
+- [ADR-0014: 사용자 제공 공고 입력과 검증된 LLM fallback](0014-user-supplied-job-input-and-validated-llm-fallback.md)
+- [ADR-0015: 운영 목표 관계형 데이터베이스로 PostgreSQL 사용](0015-use-postgresql-as-operational-database.md)
 
 ## 작성 규칙
 

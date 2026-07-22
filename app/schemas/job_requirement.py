@@ -14,10 +14,9 @@ RequirementType = Literal[
 ]
 
 
-class JobRequirementCreate(BaseModel):
+class JobRequirementDraft(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
-    job_posting_id: int = Field(gt=0)
     requirement_type: RequirementType
     name: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -25,6 +24,10 @@ class JobRequirementCreate(BaseModel):
     importance: int = Field(ge=1, le=5)
     evidence: str | None = Field(default=None, max_length=2000)
     source: str = Field(default="manual", min_length=1, max_length=50)
+
+
+class JobRequirementCreate(JobRequirementDraft):
+    job_posting_id: int = Field(gt=0)
 
 
 class JobRequirementRead(JobRequirementCreate):

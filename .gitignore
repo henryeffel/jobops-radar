@@ -21,3 +21,6 @@ jobops.db-*
 .DS_Store
 
 artifacts/comparison/
+
+frontend/node_modules/
+frontend/dist/

@@ -1,7 +1,13 @@
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class JobPostingSort(str, Enum):
+    CREATED_AT = "created_at"
+    EXPIRATION_DATE = "expiration_date"
 
 
 class JobPostingCreate(BaseModel):
