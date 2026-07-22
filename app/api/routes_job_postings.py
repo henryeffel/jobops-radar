@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas import JobPostingCreate, JobPostingRead
+from app.schemas import JobPostingCreate, JobPostingRead, JobPostingSort
 from app.services import (
     DuplicateJobPostingError,
     create_job_posting,
@@ -25,8 +25,21 @@ def read_job_postings(
     db: DbSession,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
+    company_name: Annotated[
+        str | None,
+        Query(min_length=1, max_length=255),
+    ] = None,
+    is_active: bool | None = None,
+    sort: JobPostingSort = JobPostingSort.CREATED_AT,
 ) -> list[JobPostingRead]:
-    postings = list_job_postings(db, limit=limit, offset=offset)
+    postings = list_job_postings(
+        db,
+        limit=limit,
+        offset=offset,
+        company_name=company_name,
+        is_active=is_active,
+        sort=sort,
+    )
     return [JobPostingRead.model_validate(posting) for posting in postings]
 
 

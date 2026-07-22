@@ -11,10 +11,13 @@ This document records the first job-posting case study that will guide JobOps
 Radar's domain roadmap. It is a concise engineering interpretation of the
 posting, not an implementation claim or a verbatim archive of its text.
 
-The codebase now contains a narrow internal Auth flow and security AuditLog.
-It still does not contain OIDC, organization accounts, production security
-policy enforcement, LLM integration, or high-availability evidence. Those
-concerns remain separate future work.
+The codebase now contains a narrow internal Auth flow, security AuditLog, user
+profiles, and an experimental LLM-assisted job-analysis path with deterministic
+fallback. It still does not contain OIDC, organization accounts, production
+security policy enforcement, or high-availability evidence. Those concerns
+remain separate future work. The LLM path is not production-ready because live
+provider responses now include one validated full-resume success, while earlier
+capacity, schema, and timeout failures justify keeping the deterministic fallback.
 
 ## Posting Summary
 
@@ -91,7 +94,7 @@ This documentation does not authorize or claim:
 
 - OIDC endpoints or identity-provider integration
 - refresh-token rotation, MFA, password recovery, or organization authorization
-- LLM calls
+- production-ready or unvalidated LLM decisions
 - AWS deployment resources
 - production availability claims
 

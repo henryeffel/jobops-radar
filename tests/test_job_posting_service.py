@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.models import JobPosting
-from app.schemas import JobPostingCreate, JobPostingRead
+from app.schemas import JobPostingCreate, JobPostingRead, JobPostingSort
 from app.services import (
     DuplicateJobPostingError,
     create_job_posting,
@@ -62,6 +62,28 @@ def seed_pagination_postings(
                 title=f"Posting {index}",
                 raw_payload={},
                 created_at=created_at,
+            )
+        )
+    db_session.commit()
+
+
+def seed_query_postings(db_session: Session) -> None:
+    rows = [
+        ("alpha-active", "Alpha", True, datetime(2026, 2, 10, tzinfo=timezone.utc)),
+        ("alpha-inactive", "Alpha", False, datetime(2026, 2, 5, tzinfo=timezone.utc)),
+        ("beta-active", "Beta", True, datetime(2026, 2, 1, tzinfo=timezone.utc)),
+        ("alpha-no-deadline", "Alpha", True, None),
+    ]
+    for external_id, company_name, is_active, expiration_date in rows:
+        db_session.add(
+            JobPosting(
+                source="mock",
+                external_id=external_id,
+                company_name=company_name,
+                title=external_id,
+                is_active=is_active,
+                expiration_date=expiration_date,
+                raw_payload={},
             )
         )
     db_session.commit()
@@ -161,4 +183,53 @@ def test_list_job_postings_has_deterministic_order(
         "page-2",
         "page-3",
         "page-1",
+    ]
+
+
+def test_list_job_postings_combines_filters(db_session: Session) -> None:
+    seed_query_postings(db_session)
+
+    postings = list_job_postings(
+        db_session,
+        company_name="Alpha",
+        is_active=True,
+    )
+
+    assert {posting.external_id for posting in postings} == {
+        "alpha-active",
+        "alpha-no-deadline",
+    }
+
+
+def test_list_job_postings_filters_inactive_before_pagination(
+    db_session: Session,
+) -> None:
+    seed_query_postings(db_session)
+
+    postings = list_job_postings(
+        db_session,
+        is_active=False,
+        limit=1,
+    )
+
+    assert [posting.external_id for posting in postings] == [
+        "alpha-inactive",
+    ]
+
+
+def test_list_job_postings_sorts_expiration_and_places_null_last(
+    db_session: Session,
+) -> None:
+    seed_query_postings(db_session)
+
+    postings = list_job_postings(
+        db_session,
+        sort=JobPostingSort.EXPIRATION_DATE,
+    )
+
+    assert [posting.external_id for posting in postings] == [
+        "beta-active",
+        "alpha-inactive",
+        "alpha-active",
+        "alpha-no-deadline",
     ]
