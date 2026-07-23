@@ -4,6 +4,7 @@
 
 ## 제품과 사용법
 
+- [운영 배포 현황](operations/production-deployment.md): 공개 도메인, EC2·Nginx·PostgreSQL·HTTPS 구성, 검증과 운영 과제
 - [1차 통합 MVP 후기 및 개선 방향](project/first-integrated-mvp-retrospective.md): 초기 제품 의도, 현재 한계, 지원 판단·로드맵·지원 산출물·GitHub 연동 방향
 - [지원 의사결정부터 지원 관리까지의 제품 로드맵](project/decision-to-application-roadmap.md): Decision, Assets, Tracking, Comparison 단계와 완료 조건
 - [Linux 운영과 관계형 DB 기본기 개발 계획](project/linux-operations-and-relational-db-development.md): health check, 운영 로그, systemd·Nginx, 쿼리·인덱스·트랜잭션과 2026-07-22 작업 상태
@@ -38,6 +39,7 @@
 
 - [2026-07-21 세션 로그](session-logs/2026-07-21.md): 프로필·공고 분석·LLM·MVP 완료 작업
 - [2026-07-22 세션 로그](session-logs/2026-07-22.md): health, request tracing, 공고 query, transaction과 PostgreSQL 측정 준비
+- [2026-07-23 세션 로그](session-logs/2026-07-23.md): PostgreSQL 전환, query plan, EC2·Nginx·도메인·HTTPS 배포
 - `session-logs/`, `daily-logs/`: 날짜별 historical snapshot
 - [과거 작업 요약](work-summary.md): Identity/Auth 구현 전 누적 상태
 

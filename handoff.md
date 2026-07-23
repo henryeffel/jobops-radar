@@ -19,15 +19,18 @@
 - 알 수 없는 이메일과 잘못된 비밀번호는 같은 401 응답을 사용합니다.
 - Audit module은 `USER_REGISTERED`, `LOGIN_SUCCESS`, `LOGIN_FAILURE`를 기록하며 비밀번호·token·raw request는 저장하지 않습니다.
 - Fixture provider로 외부 API 승인과 개발을 분리했습니다. Saramin provider는 경계만 있고 구현되지 않았습니다.
-- SQLAlchemy 2.0과 Alembic을 사용하며 SQLite를 로컬 fallback, PostgreSQL을 운영 목표로 둡니다.
+- SQLAlchemy 2.0과 Alembic을 사용하며 SQLite를 로컬 fallback, PostgreSQL 18.4를 운영 DB로 사용합니다.
 - 현재 migration은 `job_postings`, `job_requirements`, `users`, `user_profiles`, `audit_logs`를 생성합니다.
+- 공개 서비스는 `https://jobjobs.shop`과 `https://www.jobjobs.shop`에서 동작합니다. Nginx가 TLS·React 정적 파일·FastAPI reverse proxy를 담당하며 HTTP는 HTTPS로 redirect됩니다.
+- FastAPI 8000과 PostgreSQL 5432는 localhost로 제한됩니다. `jobops.service`, Nginx와 PostgreSQL은 systemd에서 active 상태입니다.
+- 기존 SQLite 데이터는 운영 PostgreSQL로 이전하지 않았고 전환 전 DB와 설정은 EC2 내부 권한 제한 경로에 백업했습니다.
 - 아키텍처, ADR, Karrot 사례 연구, 인증 설계, risk register, AI 협업 문서는 `docs/`에 있습니다.
 
 ## 검증 상태
 
 - `python -m pytest -q -p no:cacheprovider`: 103개 test 통과
 - 공고·요구사항 묶음의 정상 commit, check·unique constraint 실패, 예상치 못한 중간 flush 오류의 전체 rollback과 rollback 후 session 재사용을 검증했습니다.
-- 현재 개발 환경에는 Docker, PostgreSQL server와 `psql`이 없어 PostgreSQL migration과 실제 query plan은 아직 검증하지 못했습니다. SQLite 결과를 PostgreSQL 성능 근거로 사용하지 않습니다.
+- EC2 PostgreSQL 18.4에서 migration과 실제 공고 5만 건 query plan을 검증했습니다. 복합 index 적용으로 10.480ms Seq Scan·sort가 0.148ms Index Scan으로 바뀌었습니다.
 - DB 정상·장애 상태의 liveness와 readiness 분리, 장애 응답·로그의 credential 및 내부 예외 비노출을 검증했습니다.
 - 빈 SQLite DB에서 `python -m alembic upgrade head`: 통과
 - `python -m alembic check`: model drift 없음
@@ -36,6 +39,8 @@
 - 실제 `resume_sample.md`와 Karrot 분석 문서를 사용한 NVIDIA 호출이 17.1초에 LLM 경로로 성공해 16개 요구사항과 서버 계산 점수를 반환했습니다. 이전 호출에서는 `503 ResourceExhausted`, schema 오류와 timeout도 관찰됐으므로 안전한 fallback은 계속 유지합니다.
 - 실제 HTTP API end-to-end 호출도 20.2초에 LLM 경로로 성공했습니다. 가입→로그인→프로필 등록→명시적 동의 분석→프로필 삭제가 완료됐고, 요구사항 20개, matched 13개, missing 7개, warning 0개를 반환했습니다.
 - 공개 Greenhouse 채용공고 URL 3개의 fetch를 검증했고 모두 text document 추출에 성공했습니다. 그중 한 URL은 가입→프로필→URL 분석 API 여정에서 200 응답, 본문 11,844자와 요구사항 9개를 반환했습니다.
+- 외부 apex·www HTTPS UI, readiness와 OpenAPI가 200을 반환하며 외부 8000 직접 접근은 차단됩니다.
+- Let's Encrypt 인증서 발급과 `certbot renew --dry-run`이 성공했고 자동 갱신 timer가 enabled·active 상태입니다.
 
 ## 로컬 실행
 
@@ -48,7 +53,7 @@ python -m alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
 
-실제 비밀 키가 담긴 `.env`는 commit하지 않습니다. PostgreSQL은 Docker 대신 기존 Ubuntu EC2에서 우선 검증하기로 했습니다. EC2 SSH key와 host 정보도 저장소에 기록하거나 commit하지 않습니다.
+실제 비밀 키가 담긴 `.env`는 commit하지 않습니다. 운영 배포·점검 절차는 `docs/operations/production-deployment.md`를 기준으로 합니다. SSH private key와 credential도 저장소에 기록하거나 commit하지 않습니다.
 
 ## 명시적인 비목표
 
@@ -60,11 +65,11 @@ python -m uvicorn app.main:app --reload
 
 ## 다음 권장 작업
 
-1. AWS 콘솔에서 기존 EC2의 실행 상태, 현재 public IPv4와 SSH Security Group을 확인합니다.
-2. SSH가 복구되면 EC2 OS·자원·서비스를 읽기 전용 점검한 뒤 PostgreSQL 설치 여부를 결정합니다.
-3. PostgreSQL migration, 5만 건 seed와 index 적용 전 `EXPLAIN ANALYZE`를 실행합니다.
-4. baseline 근거가 있을 때만 index migration과 적용 후 비교를 진행합니다.
-5. 이후 systemd·Nginx 배포 파일과 Linux 장애 runbook을 완성합니다.
+1. PostgreSQL 정기 backup과 실제 복구 연습을 구성합니다.
+2. 운영 secret·LLM API key 교체 절차와 log rotation을 정리합니다.
+3. 로그인·분석 endpoint에 rate limit과 abuse 방어를 추가합니다.
+4. fallback reason·latency를 집계하고 장기 CPU·memory·disk 사용량을 관찰합니다.
+5. 실제 사용자 데이터가 생기기 전에 개인정보 보존·삭제 운영 절차를 확정합니다.
 
 ## 세션 기록 규칙
 

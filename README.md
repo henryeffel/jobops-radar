@@ -1,5 +1,9 @@
 # JobOps Radar
 
+운영 주소: [https://jobjobs.shop](https://jobjobs.shop)
+
+현재 EC2에서 Nginx, FastAPI와 PostgreSQL로 배포되며 HTTP는 HTTPS로 전환됩니다. 상세 구성과 검증 근거는 [운영 배포 현황](docs/operations/production-deployment.md)을 참고합니다.
+
 ## Authentication verification capacity
 
 Password verification concurrency is bounded per application process. The
