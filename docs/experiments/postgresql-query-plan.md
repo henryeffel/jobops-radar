@@ -4,7 +4,23 @@
 
 ## 상태
 
-측정 대기 — 현재 개발 환경에는 Docker, PostgreSQL server와 `psql`이 없고 `127.0.0.1:5432`도 열려 있지 않습니다. 기존 EC2를 PostgreSQL 실험 환경으로 사용하기로 했지만 현재 알려진 public IP의 22·80·443·8000 port가 모두 응답하지 않아 접속 정보를 확인해야 합니다. SQLite 실행 계획을 PostgreSQL 결과로 대신하지 않습니다.
+측정 완료 — Ubuntu 26.04 EC2의 PostgreSQL 18.4에서 migration을 적용하고 5만 건 baseline과 index 적용 후 실행 계획을 비교했습니다. PostgreSQL은 `localhost`와 Unix socket으로만 접근하며 5432를 외부에 공개하지 않았습니다.
+
+## 측정 결과
+
+| 항목 | index 적용 전 | index 적용 후 |
+| --- | ---: | ---: |
+| 실행 시간 | 10.480ms | 0.148ms |
+| scan | Seq Scan | Index Scan |
+| 별도 sort | top-N heapsort | 없음 |
+| 반환 전에 검사·제거한 행 | 50,000행 중 47,500행 제거 | 필요한 20행에서 종료 |
+| shared block | hit 1,357 | hit 20, read 3 |
+
+측정 환경에서는 약 70.8배 빨라졌습니다. 절대 시간과 개선 폭은 데이터 분포와 cache 상태에 따라 달라지므로 production 전체 성능을 대표하지 않습니다.
+
+적용한 index는 `ix_job_postings_company_active_expiration_id`이며 컬럼 순서는 `(company_name, is_active, expiration_date ASC, id DESC)`입니다. 회사명과 활성 상태 filter를 index condition으로 처리하고, 마감일과 ID 정렬 순서를 그대로 만족해 별도 sort를 제거했습니다.
+
+실험이 끝난 뒤 `source=postgres-query-plan-benchmark`인 5만 행만 삭제하고 `VACUUM (ANALYZE) job_postings`를 실행했습니다. 전후 JSON 원본은 EC2의 권한 제한 경로 `/home/ubuntu/jobops-benchmarks/`에 보관했습니다.
 
 ## 목적
 
