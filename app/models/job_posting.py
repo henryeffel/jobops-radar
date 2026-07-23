@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import (
     Boolean,
     DateTime,
+    Index,
     JSON,
     String,
     UniqueConstraint,
@@ -74,3 +75,12 @@ class JobPosting(Base):
     requirements: Mapped[list["JobRequirement"]] = relationship(
         back_populates="job_posting",
     )
+
+
+Index(
+    "ix_job_postings_company_active_expiration_id",
+    JobPosting.company_name,
+    JobPosting.is_active,
+    JobPosting.expiration_date,
+    JobPosting.id.desc(),
+)

@@ -1,0 +1,22 @@
+[Unit]
+Description=JobOps Radar FastAPI
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/jobops-radar
+EnvironmentFile=/home/ubuntu/jobops-radar/.env
+ExecStart=/home/ubuntu/jobops-radar/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=append:/var/log/jobops/app.log
+StandardError=append:/var/log/jobops/error.log
+
+[Install]
+WantedBy=multi-user.target
